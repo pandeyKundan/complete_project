@@ -34,8 +34,13 @@ app.use('/api/vulnerabilities', vulnerabilityRoutes);
 app.use('/api/scans', scanRoutes);
 app.use('/api/reports', reportRoutes);
 
-// Catch-all: send index.html for any non-API route (for client-side routing)
-app.get('*', (req, res) => {
+// IMPORTANT: This should only handle HTML routes, not API routes
+app.get('*.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', req.path));
+});
+
+// For root path, serve index.html
+app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
