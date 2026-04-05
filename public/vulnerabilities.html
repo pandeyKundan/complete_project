@@ -103,6 +103,22 @@
             border-radius: 4px;
             margin: 0.5rem 0;
         }
+        
+        .btn-sm {
+            margin: 0 2px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .status-open { background: #dc3545; color: white; }
+        .status-fixed { background: #28a745; color: white; }
+        .status-false_positive { background: #ffc107; color: #333; }
     </style>
 </head>
 <body>
@@ -229,7 +245,7 @@
             </div>
         </div>
 
-        <!-- Vulnerability Details -->
+        <!-- Vulnerability Details Modal -->
         <div class="card vulnerability-details" id="vulnDetails">
             <div class="card-header">
                 <h2 class="card-title" id="vulnTitle">Vulnerability Details</h2>
@@ -239,12 +255,13 @@
             <div class="detail-section">
                 <h3>Description</h3>
                 <p id="vulnDescription"></p>
-                <div class="vuln-impact" id="vulnImpact"></div>
+                <div class="vuln-impact" id="vulnSeverity"></div>
             </div>
             
             <div class="detail-section">
                 <h3>Location</h3>
-                <p><strong>File/Endpoint:</strong> <span id="vulnLocation"></span></p>
+                <p><strong>Target URL:</strong> <span id="vulnTargetUrl"></span></p>
+                <p><strong>Location:</strong> <span id="vulnLocation"></span></p>
             </div>
             
             <div class="detail-section">
@@ -264,9 +281,9 @@
             </div>
             
             <div class="detail-section">
-                <h3>Remediation Actions</h3>
+                <h3>Change Status</h3>
                 <div class="form-group">
-                    <label class="form-label">Change Status</label>
+                    <label class="form-label">Status</label>
                     <select id="statusSelect" class="form-control">
                         <option value="open">Open</option>
                         <option value="fixed">Fixed</option>
@@ -285,15 +302,17 @@
     <script src="js/main.js"></script>
     
     <script>
-        // Global variables
         let allVulnerabilities = [];
         let currentFilter = 'all';
         let currentSearch = '';
         let currentSelectedVulnId = null;
 
-        // Helper: fetch JSON with error handling
+        // Helper function for API calls
         async function fetchJSON(url, options = {}) {
-            const res = await fetch(url, options);
+            const res = await fetch(url, {
+                ...options,
+                credentials: 'include'
+            });
             if (!res.ok) {
                 const err = await res.json().catch(() => ({ error: 'Request failed' }));
                 throw new Error(err.error || `HTTP ${res.status}`);
@@ -301,12 +320,11 @@
             return res.json();
         }
 
-        // Check authentication and load user info
+        // Check authentication
         async function checkAuth() {
             try {
                 const data = await fetchJSON('/api/auth/me');
-                const user = data.user;
-                document.getElementById('userName').innerText = user.first_name + ' ' + user.last_name;
+                document.getElementById('userName').innerText = data.user.first_name + ' ' + data.user.last_name;
                 return true;
             } catch (err) {
                 console.error('Auth error:', err);
@@ -330,10 +348,11 @@
 
         // Update severity badges and sidebar critical count
         function updateCountsAndBadges() {
-            const critical = allVulnerabilities.filter(v => v.severity === 'critical').length;
-            const high = allVulnerabilities.filter(v => v.severity === 'high').length;
-            const medium = allVulnerabilities.filter(v => v.severity === 'medium').length;
-            const low = allVulnerabilities.filter(v => v.severity === 'low').length;
+            const critical = allVulnerabilities.filter(v => v.severity === 'critical' && v.status === 'open').length;
+            const high = allVulnerabilities.filter(v => v.severity === 'high' && v.status === 'open').length;
+            const medium = allVulnerabilities.filter(v => v.severity === 'medium' && v.status === 'open').length;
+            const low = allVulnerabilities.filter(v => v.severity === 'low' && v.status === 'open').length;
+            
             document.getElementById('criticalBadge').innerText = critical;
             document.getElementById('vulnCounts').innerHTML = `
                 <span class="badge badge-critical">${critical} Critical</span>
@@ -345,6 +364,7 @@
         // Filter vulnerabilities based on currentFilter and currentSearch
         function getFilteredVulnerabilities() {
             let filtered = [...allVulnerabilities];
+            
             // Filter by severity/status
             if (currentFilter !== 'all') {
                 if (currentFilter === 'fixed') {
@@ -355,6 +375,7 @@
                     filtered = filtered.filter(v => v.severity === currentFilter);
                 }
             }
+            
             // Search by title, description, location
             if (currentSearch) {
                 const searchLower = currentSearch.toLowerCase();
@@ -364,6 +385,7 @@
                     (v.location && v.location.toLowerCase().includes(searchLower))
                 );
             }
+            
             return filtered;
         }
 
@@ -371,25 +393,37 @@
         function renderTable() {
             const filtered = getFilteredVulnerabilities();
             const tbody = document.getElementById('vulnerabilitiesTableBody');
+            
             if (filtered.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" style="text-align:center">No vulnerabilities match the filters</td></tr>';
                 return;
             }
+            
             tbody.innerHTML = '';
             filtered.forEach(v => {
                 const row = document.createElement('tr');
-                row.className = `vuln-row ${v.severity}`;
-                row.setAttribute('data-vuln-id', v.id);
-                // Format date
+                const severityClass = v.severity;
                 const date = new Date(v.created_at).toLocaleString();
-                const statusBadgeClass = v.status === 'fixed' ? 'badge-info' : (v.status === 'false_positive' ? 'badge-warning' : 'badge-danger');
-                const statusText = v.status === 'false_positive' ? 'False Positive' : (v.status.charAt(0).toUpperCase() + v.status.slice(1));
+                
+                let statusClass = '';
+                let statusText = '';
+                if (v.status === 'fixed') {
+                    statusClass = 'status-fixed';
+                    statusText = 'Fixed';
+                } else if (v.status === 'false_positive') {
+                    statusClass = 'status-false_positive';
+                    statusText = 'False Positive';
+                } else {
+                    statusClass = 'status-open';
+                    statusText = 'Open';
+                }
+                
                 row.innerHTML = `
                     <td>VULN-${String(v.id).padStart(3,'0')}</td>
                     <td>${escapeHtml(v.title)}</td>
-                    <td><span class="badge badge-${v.severity}">${v.severity.charAt(0).toUpperCase() + v.severity.slice(1)}</span></td>
+                    <td><span class="badge badge-${severityClass}">${severityClass.charAt(0).toUpperCase() + severityClass.slice(1)}</span></td>
                     <td>${escapeHtml(v.location || 'N/A')}</td>
-                    <td><span class="badge ${statusBadgeClass}">${statusText}</span></td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                     <td>${date}</td>
                     <td>
                         <button class="btn btn-sm btn-outline" onclick="showDetails(${v.id})">Details</button>
@@ -403,28 +437,20 @@
             });
         }
 
-        // Helper to escape HTML
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            });
-        }
-
         // Show details panel for a vulnerability
         async function showDetails(id) {
             try {
                 const vuln = await fetchJSON(`/api/vulnerabilities/${id}`);
                 currentSelectedVulnId = vuln.id;
+                
                 document.getElementById('vulnTitle').innerText = vuln.title;
                 document.getElementById('vulnDescription').innerText = vuln.description || 'No description provided.';
-                document.getElementById('vulnImpact').innerHTML = `<strong>Severity:</strong> ${vuln.severity.toUpperCase()}`;
+                document.getElementById('vulnSeverity').innerHTML = `<strong>Severity:</strong> ${vuln.severity.toUpperCase()}`;
+                document.getElementById('vulnTargetUrl').innerText = vuln.target_url || 'Unknown';
                 document.getElementById('vulnLocation').innerText = vuln.location || 'Unknown';
                 document.getElementById('vulnRemediation').innerText = vuln.remediation || 'No remediation steps provided.';
-                // Build solution steps from remediation (split by sentences or just show as list)
+                
+                // Build solution steps from remediation
                 const solutionList = document.getElementById('vulnSolution');
                 solutionList.innerHTML = '';
                 if (vuln.remediation) {
@@ -437,11 +463,14 @@
                 } else {
                     solutionList.innerHTML = '<li>No specific remediation provided.</li>';
                 }
+                
                 document.getElementById('vulnScanId').innerText = vuln.scan_id;
                 document.getElementById('vulnCreatedAt').innerText = new Date(vuln.created_at).toLocaleString();
+                
                 // Set current status in dropdown
                 const statusSelect = document.getElementById('statusSelect');
                 statusSelect.value = vuln.status;
+                
                 document.getElementById('vulnDetails').classList.add('active');
                 document.getElementById('vulnDetails').scrollIntoView({ behavior: 'smooth' });
             } catch (err) {
@@ -449,7 +478,7 @@
             }
         }
 
-        // Update vulnerability status (from details panel)
+        // Update vulnerability status
         async function updateStatus() {
             if (!currentSelectedVulnId) return;
             const newStatus = document.getElementById('statusSelect').value;
@@ -461,13 +490,13 @@
                 });
                 alert('Status updated successfully');
                 hideVulnDetails();
-                await loadVulnerabilities(); // reload table and counts
+                await loadVulnerabilities();
             } catch (err) {
                 alert('Failed to update status: ' + err.message);
             }
         }
 
-        // Quick fix button (mark as fixed)
+        // Quick fix button
         async function fixVulnerability(id) {
             try {
                 await fetchJSON(`/api/vulnerabilities/${id}/status`, {
@@ -482,7 +511,7 @@
             }
         }
 
-        // Reopen a fixed/false positive vulnerability
+        // Reopen vulnerability
         async function reopenVulnerability(id) {
             try {
                 await fetchJSON(`/api/vulnerabilities/${id}/status`, {
@@ -497,26 +526,39 @@
             }
         }
 
+        // Hide details panel
         function hideVulnDetails() {
             document.getElementById('vulnDetails').classList.remove('active');
             currentSelectedVulnId = null;
         }
 
-        // Filter and search event handlers
+        // Apply filters and search
         function applyFilters() {
             renderTable();
         }
 
         // Logout
         async function logout() {
-            await fetch('/api/auth/logout', { method: 'POST' });
+            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
             window.location.href = '/login.html';
         }
 
-        // Initialization
+        // Escape HTML helper
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, m => {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        // Initialize
         window.addEventListener('DOMContentLoaded', async () => {
             const authenticated = await checkAuth();
             if (!authenticated) return;
+            
             await loadVulnerabilities();
             
             // Set up filter chips
@@ -535,11 +577,11 @@
                 applyFilters();
             });
             
-            // Details panel close and update button
+            // Details panel buttons
             document.getElementById('closeDetailsBtn').addEventListener('click', hideVulnDetails);
             document.getElementById('updateStatusBtn').addEventListener('click', updateStatus);
             
-            // Logout
+            // Logout button
             document.getElementById('logoutBtn').addEventListener('click', logout);
         });
     </script>
