@@ -1,455 +1,520 @@
-/* styles/main.css */
-:root {
-    --primary: #2a75ff;
-    --primary-dark: #1a5bd9;
-    --secondary: #ff3e41;
-    --dark: #0a192f;
-    --light: #f8f9fa;
-    --accent: #00d1b2;
-    --gray: #495057;
-    --gradient: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    --sidebar-width: 250px;
-    --header-height: 70px;
-}
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Poppins', sans-serif;
-    background-color: var(--dark);
-    color: var(--light);
-    overflow-x: hidden;
-}
-
-/* Common Components */
-.btn {
-    padding: 0.6rem 1.2rem;
-    border-radius: 4px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s;
-    border: none;
-    font-size: 0.9rem;
-    text-decoration: none;
-    display: inline-block;
-    text-align: center;
-}
-
-.btn-outline {
-    background: transparent;
-    border: 1px solid var(--primary);
-    color: var(--primary);
-}
-
-.btn-outline:hover {
-    background: var(--primary);
-    color: white;
-}
-
-.btn-primary {
-    background: var(--primary);
-    color: white;
-}
-
-.btn-primary:hover {
-    background: var(--primary-dark);
-    transform: translateY(-2px);
-}
-
-.btn-danger {
-    background: var(--secondary);
-    color: white;
-}
-
-.btn-danger:hover {
-    background: #ff1e22;
-}
-
-/* Header Styles */
-.header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    z-index: 1000;
-    padding: 1rem 5%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: rgba(10, 25, 47, 0.95);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    height: var(--header-height);
-}
-
-.logo {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.logo img {
-    height: 2.5rem;
-}
-
-.logo-text {
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 700;
-    font-size: 1.5rem;
-    background: linear-gradient(to right, var(--primary), var(--accent));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-}
-
-.nav-menu {
-    display: flex;
-    gap: 2rem;
-    list-style: none;
-}
-
-.nav-menu a {
-    color: var(--light);
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 1rem;
-    transition: color 0.3s;
-    position: relative;
-}
-
-.nav-menu a:hover {
-    color: var(--primary);
-}
-
-.nav-menu a.active {
-    color: var(--primary);
-}
-
-.nav-menu a.active::after {
-    content: '';
-    position: absolute;
-    bottom: -5px;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background: var(--primary);
-}
-
-/* Sidebar */
-.sidebar {
-    position: fixed;
-    left: 0;
-    top: var(--header-height);
-    width: var(--sidebar-width);
-    height: calc(100vh - var(--header-height));
-    background: rgba(10, 25, 47, 0.9);
-    backdrop-filter: blur(10px);
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 2rem 1rem;
-    overflow-y: auto;
-    transition: transform 0.3s;
-}
-
-.sidebar-menu {
-    list-style: none;
-}
-
-.sidebar-item {
-    margin-bottom: 0.5rem;
-}
-
-.sidebar-link {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.8rem 1rem;
-    color: var(--light);
-    text-decoration: none;
-    border-radius: 6px;
-    transition: all 0.3s;
-}
-
-.sidebar-link:hover {
-    background: rgba(42, 117, 255, 0.1);
-    color: var(--primary);
-}
-
-.sidebar-link.active {
-    background: rgba(42, 117, 255, 0.2);
-    color: var(--primary);
-}
-
-.sidebar-link i {
-    width: 20px;
-    text-align: center;
-}
-
-/* Main Content */
-.main-content {
-    margin-left: var(--sidebar-width);
-    margin-top: var(--header-height);
-    padding: 2rem;
-    min-height: calc(100vh - var(--header-height));
-}
-
-.page-header {
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.page-header h1 {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-}
-
-.page-header p {
-    color: rgba(255, 255, 255, 0.7);
-}
-
-/* Cards */
-.card {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-    padding: 1.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(5px);
-    margin-bottom: 1.5rem;
-    transition: all 0.3s;
-}
-
-.card:hover {
-    border-color: rgba(42, 117, 255, 0.3);
-    box-shadow: 0 10px 30px rgba(42, 117, 255, 0.1);
-}
-
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-}
-
-.card-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-}
-
-/* Tables */
-.table-responsive {
-    overflow-x: auto;
-}
-
-.table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.table th,
-.table td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.table th {
-    font-weight: 600;
-    color: var(--primary);
-    background: rgba(42, 117, 255, 0.1);
-}
-
-.table tbody tr:hover {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-/* Forms */
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-}
-
-.form-control {
-    width: 100%;
-    padding: 0.8rem;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-    color: var(--light);
-    font-family: inherit;
-    transition: all 0.3s;
-}
-
-.form-control:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(42, 117, 255, 0.2);
-}
-
-/* Grid System */
-.grid {
-    display: grid;
-    gap: 1.5rem;
-}
-
-.grid-cols-1 {
-    grid-template-columns: 1fr;
-}
-
-.grid-cols-2 {
-    grid-template-columns: repeat(2, 1fr);
-}
-
-.grid-cols-3 {
-    grid-template-columns: repeat(3, 1fr);
-}
-
-.grid-cols-4 {
-    grid-template-columns: repeat(4, 1fr);
-}
-
-/* Status Badges */
-.badge {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.badge-critical {
-    background: rgba(255, 62, 65, 0.2);
-    color: #ff3e41;
-    border: 1px solid rgba(255, 62, 65, 0.3);
-}
-
-.badge-high {
-    background: rgba(255, 152, 0, 0.2);
-    color: #ff9800;
-    border: 1px solid rgba(255, 152, 0, 0.3);
-}
-
-.badge-medium {
-    background: rgba(255, 193, 7, 0.2);
-    color: #ffc107;
-    border: 1px solid rgba(255, 193, 7, 0.3);
-}
-
-.badge-low {
-    background: rgba(76, 175, 80, 0.2);
-    color: #4caf50;
-    border: 1px solid rgba(76, 175, 80, 0.3);
-}
-
-.badge-info {
-    background: rgba(42, 117, 255, 0.2);
-    color: var(--primary);
-    border: 1px solid rgba(42, 117, 255, 0.3);
-}
-
-/* Progress Bars */
-.progress {
-    height: 8px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.progress-bar {
-    height: 100%;
-    background: var(--primary);
-    border-radius: 4px;
-    transition: width 0.3s;
-}
-
-/* Animations */
-@keyframes scan {
-    0% { transform: translateY(-100%); }
-    100% { transform: translateY(100%); }
-}
-
-@keyframes pulse {
-    0% { opacity: 0.6; }
-    50% { opacity: 1; }
-    100% { opacity: 0.6; }
-}
-
-@keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-15px); }
-    100% { transform: translateY(0px); }
-}
-
-/* Responsive */
-@media (max-width: 992px) {
-    .sidebar {
-        transform: translateX(-100%);
-    }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>֎🇦🇮 Rakshak - Dashboard</title>
     
-    .sidebar.active {
-        transform: translateX(0);
-    }
-    
-    .main-content {
-        margin-left: 0;
-    }
-    
-    .grid-cols-4 {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/dashboard.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <img src="https://via.placeholder.com/40x40" alt="Rakshak Logo">
+            <span class="logo-text">RAKSHAK</span>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="dashboard.html" class="active">Dashboard</a></li>
+            <li><a href="scanner.html">Scanner</a></li>
+            <li><a href="reports.html">Reports</a></li>
+            <li><a href="vulnerabilities.html">Vulnerabilities</a></li>
+        </ul>
+        <div class="user-menu">
+            <div class="user-avatar">
+                <img src="https://via.placeholder.com/40x40" alt="User Avatar">
+            </div>
+            <div class="user-info">
+                <span class="user-name" id="userName">Loading...</span>
+                <span class="user-role">Security Analyst</span>
+            </div>
+            <div class="dropdown">
+                <i class="fas fa-chevron-down"></i>
+                <div class="dropdown-menu">
+                    <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
 
-@media (max-width: 768px) {
-    .grid-cols-2,
-    .grid-cols-3,
-    .grid-cols-4 {
-        grid-template-columns: 1fr;
-    }
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <ul class="sidebar-menu">
+            <li class="sidebar-item">
+                <a href="dashboard.html" class="sidebar-link active">
+                    <i class="fas fa-home"></i>
+                    <span>Overview</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="scanner.html" class="sidebar-link">
+                    <i class="fas fa-search"></i>
+                    <span>Security Scanner</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="vulnerabilities.html" class="sidebar-link">
+                    <i class="fas fa-bug"></i>
+                    <span>Vulnerabilities</span>
+                    <span class="badge badge-critical" id="criticalBadge">0</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="reports.html" class="sidebar-link">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Protection</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-bell"></i>
+                    <span>Alerts</span>
+                    <span class="badge badge-high">5</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Help & Support</span>
+                </a>
+            </li>
+        </ul>
+        
+        <div class="sidebar-footer">
+            <div class="security-status">
+                <div class="status-indicator"></div>
+                <span>System Status: <strong>Protected</strong></span>
+            </div>
+            <button class="btn btn-primary btn-block" onclick="window.location.href='scanner.html'">
+                <i class="fas fa-sync-alt"></i> Run Quick Scan
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Security Dashboard</h1>
+            <p>Monitor your web application security in real-time</p>
+            <div class="last-scan" id="lastScanInfo">
+                Last scan: <strong>--</strong> | Next scan: <strong>--</strong>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-4">
+            <div class="card">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="securityScore">--%</h3>
+                        <p>Security Score</p>
+                        <div class="progress">
+                            <div class="progress-bar" id="scoreProgressBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="stat-card">
+                    <div class="stat-icon critical">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="criticalIssues">--</h3>
+                        <p>Critical Issues</p>
+                        <span class="badge badge-critical" id="criticalWarning">Needs Attention</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-bug"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalVulns">--</h3>
+                        <p>Total Vulnerabilities</p>
+                        <span class="trend up" id="vulnTrend">--</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>24/7</h3>
+                        <p>Active Monitoring</p>
+                        <span class="status active">All Systems Operational</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-2">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Vulnerability Trends</h2>
+                    <select class="form-control period-select" id="trendPeriod">
+                        <option value="7">Last 7 days</option>
+                        <option value="30">Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="vulnerabilityChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Threat Distribution</h2>
+                    <button class="btn btn-outline" onclick="window.location.href='vulnerabilities.html'">View Details</button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="threatChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Scans -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Recent Security Scans</h2>
+                <a href="scanner.html" class="btn btn-primary">New Scan</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Target URL</th>
+                            <th>Started</th>
+                            <th>Duration</th>
+                            <th>Issues Found</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentScansTable">
+                        <tr><td colspan="6" style="text-align:center">Loading scans...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Critical Issues -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Critical Issues Requiring Attention</h2>
+                <button class="btn btn-danger" id="fixAllCriticalBtn">Fix All Critical</button>
+            </div>
+            <div class="issues-list" id="criticalIssuesList">
+                <div style="padding: 1rem; text-align: center;">Loading critical issues...</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scanner Animation -->
+    <div class="scanner-line"></div>
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/dashboard.js"></script>
     
-    .nav-menu {
-        display: none;
-    }
-    
-    .header {
-        padding: 1rem;
-    }
-}
+    <script>
+        // Global chart variables
+        let vulnerabilityChart, threatChart;
 
-/* Scanner Animation */
-.scanner-line {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background: linear-gradient(to right, transparent, var(--primary), transparent);
-    box-shadow: 0 0 10px var(--primary);
-    animation: scan 4s linear infinite;
-    z-index: 1;
-}
+        // Helper: fetch JSON with error handling
+        async function fetchJSON(url, options = {}) {
+            const res = await fetch(url, options);
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({ error: 'Request failed' }));
+                throw new Error(err.error || `HTTP ${res.status}`);
+            }
+            return res.json();
+        }
 
-/* Loading Spinner */
-.spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid rgba(255, 255, 255, 0.1);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 2rem auto;
-}
+        // Check authentication and load user name
+        async function checkAuth() {
+            try {
+                const data = await fetchJSON('/api/auth/me');
+                const user = data.user;
+                document.getElementById('userName').innerText = user.first_name + ' ' + user.last_name;
+                return true;
+            } catch (err) {
+                console.error('Auth error:', err);
+                window.location.href = '/login.html';
+                return false;
+            }
+        }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
+        // Update dashboard stats
+        async function loadStats() {
+            try {
+                const stats = await fetchJSON('/api/dashboard/stats');
+                // Security score
+                const score = stats.securityScore || 0;
+                document.getElementById('securityScore').innerText = score + '%';
+                document.getElementById('scoreProgressBar').style.width = score + '%';
+                // Critical issues
+                document.getElementById('criticalIssues').innerText = stats.criticalIssues || 0;
+                document.getElementById('criticalBadge').innerText = stats.criticalIssues || 0;
+                if (stats.criticalIssues > 0) {
+                    document.getElementById('criticalWarning').innerHTML = '<i class="fas fa-exclamation-circle"></i> Needs Immediate Attention';
+                } else {
+                    document.getElementById('criticalWarning').innerHTML = '<i class="fas fa-check-circle"></i> No Critical Issues';
+                }
+                // Total vulnerabilities
+                document.getElementById('totalVulns').innerText = stats.totalVulnerabilities || 0;
+                // Last scan info (if any recent scan)
+                if (stats.recentScans && stats.recentScans.length > 0) {
+                    const lastScan = stats.recentScans[0];
+                    const lastScanTime = new Date(lastScan.startedAt).toLocaleString();
+                    document.getElementById('lastScanInfo').innerHTML = `Last scan: <strong>${lastScanTime}</strong> | Next scan: <strong>Auto-scheduled</strong>`;
+                }
+                return stats;
+            } catch (err) {
+                console.error('Failed to load stats:', err);
+                return null;
+            }
+        }
+
+        // Load recent scans table
+        async function loadRecentScans() {
+            try {
+                const stats = await fetchJSON('/api/dashboard/stats');
+                const scans = stats.recentScans || [];
+                const tbody = document.getElementById('recentScansTable');
+                if (scans.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">No scans yet. Start a new scan!</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = '';
+                for (const scan of scans) {
+                    // Fetch vulnerability count for this scan (optional, could be from scan object)
+                    let issuesHtml = '--';
+                    if (scan.id) {
+                        try {
+                            const scanDetail = await fetchJSON(`/api/scans/${scan.id}`);
+                            const vulns = scanDetail.vulnerabilities || [];
+                            const criticalCount = vulns.filter(v => v.severity === 'critical').length;
+                            const highCount = vulns.filter(v => v.severity === 'high').length;
+                            issuesHtml = `<span class="badge badge-critical">${criticalCount}</span> <span class="badge badge-high">${highCount}</span>`;
+                        } catch(e) { issuesHtml = '--'; }
+                    }
+                    const started = new Date(scan.startedAt).toLocaleString();
+                    const duration = scan.duration ? `${scan.duration}s` : '--';
+                    const statusBadge = scan.status === 'completed' ? '<span class="badge badge-info">Completed</span>' : '<span class="badge badge-warning">Pending</span>';
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${scan.targetUrl}</td>
+                            <td>${started}</td>
+                            <td>${duration}</td>
+                            <td>${issuesHtml}</td>
+                            <td>${statusBadge}</td>
+                            <td><button class="btn btn-sm btn-outline" onclick="alert('Report view coming soon')">View Report</button></td>
+                        </tr>
+                    `;
+                }
+            } catch (err) {
+                console.error('Failed to load scans:', err);
+                document.getElementById('recentScansTable').innerHTML = '<tr><td colspan="6" style="text-align:center">Error loading scans</td></tr>';
+            }
+        }
+
+        // Load critical issues (vulnerabilities with severity=critical and status=open)
+        async function loadCriticalIssues() {
+            try {
+                const vulns = await fetchJSON('/api/vulnerabilities?severity=critical&status=open');
+                const container = document.getElementById('criticalIssuesList');
+                if (!vulns.length) {
+                    container.innerHTML = '<div class="issue-item"><div class="issue-content"><p>No critical open issues. Great job!</p></div></div>';
+                    return;
+                }
+                container.innerHTML = '';
+                vulns.forEach(v => {
+                    const issueDiv = document.createElement('div');
+                    issueDiv.className = 'issue-item critical';
+                    issueDiv.innerHTML = `
+                        <div class="issue-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="issue-content">
+                            <h4>${escapeHtml(v.title)}</h4>
+                            <p>${escapeHtml(v.description || 'No description')}</p>
+                            <div class="issue-meta">
+                                <span><i class="fas fa-code"></i> ${escapeHtml(v.location || 'Unknown')}</span>
+                                <span><i class="fas fa-calendar"></i> Detected ${new Date(v.created_at).toLocaleString()}</span>
+                                <span><i class="fas fa-user"></i> ${v.severity.toUpperCase()} Risk</span>
+                            </div>
+                        </div>
+                        <div class="issue-actions">
+                            <button class="btn btn-sm btn-danger" onclick="fixVulnerability(${v.id})">Fix Now</button>
+                            <button class="btn btn-sm btn-outline" onclick="ignoreVulnerability(${v.id})">Ignore</button>
+                        </div>
+                    `;
+                    container.appendChild(issueDiv);
+                });
+            } catch (err) {
+                console.error('Failed to load critical issues:', err);
+                document.getElementById('criticalIssuesList').innerHTML = '<div class="issue-item"><div class="issue-content">Error loading issues</div></div>';
+            }
+        }
+
+        // Helper to escape HTML
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        // Fix vulnerability (mark as fixed)
+        async function fixVulnerability(id) {
+            try {
+                await fetchJSON(`/api/vulnerabilities/${id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'fixed' })
+                });
+                alert('Vulnerability marked as fixed. Refreshing...');
+                location.reload();
+            } catch (err) {
+                alert('Failed to fix: ' + err.message);
+            }
+        }
+
+        async function ignoreVulnerability(id) {
+            try {
+                await fetchJSON(`/api/vulnerabilities/${id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'false_positive' })
+                });
+                alert('Vulnerability ignored. Refreshing...');
+                location.reload();
+            } catch (err) {
+                alert('Failed to ignore: ' + err.message);
+            }
+        }
+
+        // Load trends and update chart
+        async function loadTrends() {
+            try {
+                const trends = await fetchJSON('/api/dashboard/trends');
+                if (vulnerabilityChart) {
+                    vulnerabilityChart.data.datasets[0].data = trends.critical;
+                    vulnerabilityChart.data.datasets[1].data = trends.high;
+                    vulnerabilityChart.data.datasets[2].data = trends.medium;
+                    vulnerabilityChart.update();
+                }
+                // Also update threat distribution (pie chart) – we can fetch from vulnerabilities stats
+                const stats = await fetchJSON('/api/dashboard/stats');
+                // For threat distribution, we can compute from vulnerability counts by severity (simulate)
+                // But backend doesn't provide that directly, so we'll use static data for now
+                // Or we can fetch all vulnerabilities and count severity
+                const allVulns = await fetchJSON('/api/vulnerabilities');
+                const severityCounts = { critical:0, high:0, medium:0, low:0 };
+                allVulns.forEach(v => { severityCounts[v.severity]++; });
+                if (threatChart) {
+                    threatChart.data.datasets[0].data = [severityCounts.critical, severityCounts.high, severityCounts.medium, severityCounts.low];
+                    threatChart.update();
+                }
+            } catch (err) {
+                console.error('Failed to load trends:', err);
+            }
+        }
+
+        // Initialize charts (must be after DOM ready)
+        function initCharts() {
+            const vulnCtx = document.getElementById('vulnerabilityChart').getContext('2d');
+            vulnerabilityChart = new Chart(vulnCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [
+                        { label: 'Critical', data: [0,0,0,0,0,0,0], borderColor: '#ff3e41', backgroundColor: 'rgba(255,62,65,0.1)', tension: 0.4 },
+                        { label: 'High', data: [0,0,0,0,0,0,0], borderColor: '#ff9800', backgroundColor: 'rgba(255,152,0,0.1)', tension: 0.4 },
+                        { label: 'Medium', data: [0,0,0,0,0,0,0], borderColor: '#ffc107', backgroundColor: 'rgba(255,193,7,0.1)', tension: 0.4 }
+                    ]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'top' } } }
+            });
+            const threatCtx = document.getElementById('threatChart').getContext('2d');
+            threatChart = new Chart(threatCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Critical', 'High', 'Medium', 'Low'],
+                    datasets: [{ data: [0,0,0,0], backgroundColor: ['#ff3e41','#ff9800','#ffc107','#4caf50'] }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'right' } } }
+            });
+        }
+
+        // Logout function
+        async function logout() {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = '/login.html';
+        }
+
+        // Fix all critical (bulk update)
+        async function fixAllCritical() {
+            try {
+                const vulns = await fetchJSON('/api/vulnerabilities?severity=critical&status=open');
+                for (const v of vulns) {
+                    await fetchJSON(`/api/vulnerabilities/${v.id}/status`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: 'fixed' })
+                    });
+                }
+                alert('All critical issues marked as fixed. Refreshing...');
+                location.reload();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        // Main initialization
+        window.addEventListener('DOMContentLoaded', async () => {
+            const authenticated = await checkAuth();
+            if (!authenticated) return;
+            initCharts();
+            await loadStats();
+            await loadRecentScans();
+            await loadCriticalIssues();
+            await loadTrends();
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+            document.getElementById('fixAllCriticalBtn').addEventListener('click', fixAllCritical);
+            document.getElementById('trendPeriod').addEventListener('change', () => loadTrends()); // placeholder for future dynamic period
+        });
+    </script>
+</body>
+</html>
