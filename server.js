@@ -24,7 +24,7 @@ app.use(session({
   cookie: { secure: false, httpOnly: true, maxAge: 24 * 60 * 60 * 1000 }
 }));
 
-// Serve static frontend files from "public" folder
+// Serve static files from "public" folder
 app.use(express.static(path.join(__dirname, 'public')));
 
 // API routes
@@ -34,21 +34,26 @@ app.use('/api/vulnerabilities', vulnerabilityRoutes);
 app.use('/api/scans', scanRoutes);
 app.use('/api/reports', reportRoutes);
 
-// IMPORTANT: This should only handle HTML routes, not API routes
-app.get('*.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', req.path));
-});
-
-// For root path, serve index.html
+// ========== IMPORTANT FIX: Serve index.html for root path ==========
+// This sends the HOMEPAGE (landing page) when someone visits /
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Handle 404 for unknown API routes
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: 'API endpoint not found' });
+});
+
+// Error handler
 app.use(errorHandler);
 
 initDatabase().then(() => {
   app.listen(PORT, () => {
     console.log(`🚀 Rakshak backend running on http://localhost:${PORT}`);
+    console.log(`📄 Homepage: http://localhost:${PORT}/`);
+    console.log(`🔐 Login: http://localhost:${PORT}/login.html`);
+    console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard.html`);
   });
 }).catch(err => {
   console.error('Database init failed:', err);
