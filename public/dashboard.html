@@ -3,20 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>֎🇦🇮 Rakshak - Dashboard</title>
-    
+    <title>Rakshak - Security Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles/main.css">
-    <link rel="stylesheet" href="styles/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: #0a192f; color: white; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: rgba(10,25,47,0.95); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .logo-text { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #2a75ff, #00d1b2); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .nav-menu { display: flex; list-style: none; gap: 2rem; }
+        .nav-menu a { color: white; text-decoration: none; }
+        .nav-menu a.active { color: #2a75ff; }
+        .main-content { padding: 2rem; margin-left: 260px; }
+        .sidebar { position: fixed; left: 0; top: 70px; width: 250px; height: calc(100vh - 70px); background: rgba(10,25,47,0.95); border-right: 1px solid rgba(255,255,255,0.1); padding: 2rem 1rem; }
+        .sidebar-link { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem; color: white; text-decoration: none; border-radius: 8px; margin-bottom: 0.5rem; }
+        .sidebar-link.active { background: rgba(42,117,255,0.2); color: #2a75ff; }
+        .grid { display: grid; gap: 1.5rem; margin-bottom: 2rem; }
+        .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+        .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .card { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.1); }
+        .stat-card { display: flex; align-items: center; gap: 1rem; }
+        .stat-icon { width: 50px; height: 50px; background: rgba(42,117,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #2a75ff; }
+        .stat-info h3 { font-size: 2rem; font-family: 'Orbitron', sans-serif; }
+        .progress { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; margin-top: 0.5rem; }
+        .progress-bar { height: 100%; background: #2a75ff; border-radius: 3px; }
+        .badge { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+        .badge-critical { background: #ff3e41; }
+        .badge-high { background: #ff9800; }
+        .badge-medium { background: #ffc107; color: #333; }
+        .table { width: 100%; border-collapse: collapse; }
+        .table th, .table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .issue-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .issue-item.critical { background: rgba(255,62,65,0.1); }
+        .btn { padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 500; }
+        .btn-primary { background: #2a75ff; border: none; color: white; }
+        .btn-danger { background: #ff3e41; border: none; color: white; }
+        .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: white; }
+        .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+        .chart-container { height: 300px; }
+        @media (max-width: 1200px) { .grid-cols-4 { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 768px) { .main-content { margin-left: 0; } .sidebar { display: none; } }
+    </style>
 </head>
 <body>
-    <!-- Header -->
     <header class="header">
-        <div class="logo">
-            <img src="https://via.placeholder.com/40x40" alt="Rakshak Logo">
-            <span class="logo-text">RAKSHAK</span>
-        </div>
+        <div class="logo"><span class="logo-text">RAKSHAK</span></div>
         <ul class="nav-menu">
             <li><a href="index.html">Home</a></li>
             <li><a href="dashboard.html" class="active">Dashboard</a></li>
@@ -24,512 +56,128 @@
             <li><a href="reports.html">Reports</a></li>
             <li><a href="vulnerabilities.html">Vulnerabilities</a></li>
         </ul>
-        <div class="user-menu">
-            <div class="user-avatar">
-                <img src="https://via.placeholder.com/40x40" alt="User Avatar">
-            </div>
-            <div class="user-info">
-                <span class="user-name" id="userName">Loading...</span>
-                <span class="user-role">Security Analyst</span>
-            </div>
-            <div class="dropdown">
-                <i class="fas fa-chevron-down"></i>
-                <div class="dropdown-menu">
-                    <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                </div>
-            </div>
-        </div>
+        <div><span id="userName">Loading...</span> | <a href="#" id="logoutBtn" style="color:#ff3e41;">Logout</a></div>
     </header>
 
-    <!-- Sidebar -->
     <aside class="sidebar">
-        <ul class="sidebar-menu">
-            <li class="sidebar-item">
-                <a href="dashboard.html" class="sidebar-link active">
-                    <i class="fas fa-home"></i>
-                    <span>Overview</span>
-                </a>
-            </li>
-            <li class="sidebar-item">
-                <a href="scanner.html" class="sidebar-link">
-                    <i class="fas fa-search"></i>
-                    <span>Security Scanner</span>
-                </a>
-            </li>
-            <li class="sidebar-item">
-                <a href="vulnerabilities.html" class="sidebar-link">
-                    <i class="fas fa-bug"></i>
-                    <span>Vulnerabilities</span>
-                    <span class="badge badge-critical" id="criticalBadge">0</span>
-                </a>
-            </li>
-            <li class="sidebar-item">
-                <a href="reports.html" class="sidebar-link">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Reports</span>
-                </a>
-            </li>
-            <li class="sidebar-item">
-                <a href="#" class="sidebar-link">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>Protection</span>
-                </a>
-            </li>
-            <li class="sidebar-item">
-                <a href="#" class="sidebar-link">
-                    <i class="fas fa-bell"></i>
-                    <span>Alerts</span>
-                    <span class="badge badge-high">5</span>
-                </a>
-            </li>
-            <li class="sidebar-item">
-                <a href="#" class="sidebar-link">
-                    <i class="fas fa-cog"></i>
-                    <span>Settings</span>
-                </a>
-            </li>
-            <li class="sidebar-item">
-                <a href="#" class="sidebar-link">
-                    <i class="fas fa-question-circle"></i>
-                    <span>Help & Support</span>
-                </a>
-            </li>
-        </ul>
-        
-        <div class="sidebar-footer">
-            <div class="security-status">
-                <div class="status-indicator"></div>
-                <span>System Status: <strong>Protected</strong></span>
-            </div>
-            <button class="btn btn-primary btn-block" onclick="window.location.href='scanner.html'">
-                <i class="fas fa-sync-alt"></i> Run Quick Scan
-            </button>
-        </div>
+        <a href="dashboard.html" class="sidebar-link active"><i class="fas fa-home"></i> Overview</a>
+        <a href="scanner.html" class="sidebar-link"><i class="fas fa-search"></i> Scanner</a>
+        <a href="vulnerabilities.html" class="sidebar-link"><i class="fas fa-bug"></i> Vulnerabilities</a>
+        <a href="reports.html" class="sidebar-link"><i class="fas fa-chart-bar"></i> Reports</a>
     </aside>
 
-    <!-- Main Content -->
     <main class="main-content">
-        <div class="page-header">
+        <div style="margin-bottom: 2rem;">
             <h1>Security Dashboard</h1>
-            <p>Monitor your web application security in real-time</p>
-            <div class="last-scan" id="lastScanInfo">
-                Last scan: <strong>--</strong> | Next scan: <strong>--</strong>
-            </div>
+            <p id="lastScanInfo">Loading...</p>
         </div>
 
-        <!-- Stats Grid -->
         <div class="grid grid-cols-4">
-            <div class="card">
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 id="securityScore">--%</h3>
-                        <p>Security Score</p>
-                        <div class="progress">
-                            <div class="progress-bar" id="scoreProgressBar" style="width: 0%"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="stat-card">
-                    <div class="stat-icon critical">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 id="criticalIssues">--</h3>
-                        <p>Critical Issues</p>
-                        <span class="badge badge-critical" id="criticalWarning">Needs Immediate Attention</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-bug"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 id="totalVulns">--</h3>
-                        <p>Total Vulnerabilities</p>
-                        <span class="trend up" id="vulnTrend">--</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>24/7</h3>
-                        <p>Active Monitoring</p>
-                        <span class="status active">All Systems Operational</span>
-                    </div>
-                </div>
-            </div>
+            <div class="card"><div class="stat-card"><div class="stat-icon"><i class="fas fa-shield-alt"></i></div><div class="stat-info"><h3 id="securityScore">--%</h3><p>Security Score</p><div class="progress"><div class="progress-bar" id="scoreBar" style="width:0%"></div></div></div></div></div>
+            <div class="card"><div class="stat-card"><div class="stat-icon critical"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-info"><h3 id="criticalIssues">--</h3><p>Critical Issues</p></div></div></div>
+            <div class="card"><div class="stat-card"><div class="stat-icon"><i class="fas fa-bug"></i></div><div class="stat-info"><h3 id="totalVulns">--</h3><p>Total Vulnerabilities</p></div></div></div>
+            <div class="card"><div class="stat-card"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-info"><h3>24/7</h3><p>Active Monitoring</p></div></div></div>
         </div>
 
-        <!-- Charts Section -->
         <div class="grid grid-cols-2">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Vulnerability Trends</h2>
-                    <select class="form-control period-select" id="trendPeriod">
-                        <option value="7">Last 7 days</option>
-                        <option value="30">Last 30 days</option>
-                        <option value="90">Last 90 days</option>
-                    </select>
-                </div>
-                <div class="chart-container">
-                    <canvas id="vulnerabilityChart"></canvas>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Threat Distribution</h2>
-                    <button class="btn btn-outline" onclick="window.location.href='vulnerabilities.html'">View Details</button>
-                </div>
-                <div class="chart-container">
-                    <canvas id="threatChart"></canvas>
-                </div>
-            </div>
+            <div class="card"><h3>Vulnerability Trends</h3><div class="chart-container"><canvas id="trendChart"></canvas></div></div>
+            <div class="card"><h3>Threat Distribution</h3><div class="chart-container"><canvas id="threatChart"></canvas></div></div>
         </div>
 
-        <!-- Recent Scans -->
         <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">Recent Security Scans</h2>
-                <a href="scanner.html" class="btn btn-primary">New Scan</a>
-            </div>
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Target URL</th>
-                            <th>Started</th>
-                            <th>Duration</th>
-                            <th>Issues Found</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="recentScansTable">
-                        <tr><td colspan="6" style="text-align:center">Loading scans...</td></tr>
-                    </tbody>
-                </table>
-            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:1rem;"><h3>Recent Scans</h3><a href="scanner.html" class="btn btn-primary">New Scan</a></div>
+            <table class="table"><thead><tr><th>Target URL</th><th>Started</th><th>Status</th><th>Actions</th></tr></thead><tbody id="scansTable"><tr><td colspan="4">Loading...</td></tr></tbody></table>
         </div>
 
-        <!-- Critical Issues -->
         <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">Critical Issues Requiring Attention</h2>
-                <button class="btn btn-danger" id="fixAllCriticalBtn">Fix All Critical</button>
-            </div>
-            <div class="issues-list" id="criticalIssuesList">
-                <div style="padding: 1rem; text-align: center;">Loading critical issues...</div>
-            </div>
+            <h3>Critical Issues</h3>
+            <div id="criticalIssuesList">Loading...</div>
         </div>
     </main>
 
-    <!-- Scanner Animation -->
-    <div class="scanner-line"></div>
-
-    <!-- JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="js/main.js"></script>
-    <script src="js/dashboard.js"></script>
-    
     <script>
-        let vulnerabilityChart, threatChart;
-
-        // Helper function for API calls
+        let trendChart, threatChart;
+        
         async function fetchJSON(url, options = {}) {
-            const res = await fetch(url, {
-                ...options,
-                credentials: 'include'  // Important for session cookies
-            });
-            if (!res.ok) {
-                const err = await res.json().catch(() => ({ error: 'Request failed' }));
-                throw new Error(err.error || `HTTP ${res.status}`);
-            }
+            const res = await fetch(url, { ...options, credentials: 'include' });
+            if (!res.ok) throw new Error(await res.text());
             return res.json();
         }
-
-        // Check authentication
+        
         async function checkAuth() {
             try {
                 const data = await fetchJSON('/api/auth/me');
                 document.getElementById('userName').innerText = data.user.first_name + ' ' + data.user.last_name;
                 return true;
-            } catch (err) {
-                console.error('Auth error:', err);
-                window.location.href = '/login.html';
-                return false;
-            }
+            } catch(e) { window.location.href = '/login.html'; return false; }
         }
-
-        // Load dashboard stats
-        async function loadStats() {
+        
+        async function loadDashboard() {
             try {
                 const stats = await fetchJSON('/api/dashboard/stats');
-                
-                // Update security score
-                const score = stats.securityScore || 0;
-                document.getElementById('securityScore').innerText = score + '%';
-                document.getElementById('scoreProgressBar').style.width = score + '%';
-                
-                // Update critical issues
-                const critical = stats.criticalIssues || 0;
-                document.getElementById('criticalIssues').innerText = critical;
-                document.getElementById('criticalBadge').innerText = critical;
-                
-                if (critical > 0) {
-                    document.getElementById('criticalWarning').innerHTML = '<i class="fas fa-exclamation-circle"></i> Needs Immediate Attention';
-                } else {
-                    document.getElementById('criticalWarning').innerHTML = '<i class="fas fa-check-circle"></i> No Critical Issues';
+                document.getElementById('securityScore').innerText = stats.securityScore + '%';
+                document.getElementById('scoreBar').style.width = stats.securityScore + '%';
+                document.getElementById('criticalIssues').innerText = stats.criticalIssues;
+                document.getElementById('totalVulns').innerText = stats.totalVulnerabilities;
+                if (stats.recentScans && stats.recentScans.length) {
+                    document.getElementById('lastScanInfo').innerHTML = `Last scan: ${new Date(stats.recentScans[0].startedAt).toLocaleString()}`;
                 }
-                
-                // Update total vulnerabilities
-                document.getElementById('totalVulns').innerText = stats.totalVulnerabilities || 0;
-                
-                // Update last scan info
-                if (stats.recentScans && stats.recentScans.length > 0) {
-                    const lastScan = stats.recentScans[0];
-                    const lastScanTime = new Date(lastScan.startedAt).toLocaleString();
-                    document.getElementById('lastScanInfo').innerHTML = `Last scan: <strong>${lastScanTime}</strong> | Next scan: <strong>Auto-scheduled</strong>`;
-                }
-                
-                return stats;
-            } catch (err) {
-                console.error('Failed to load stats:', err);
-                return null;
-            }
+            } catch(e) { console.error(e); }
         }
-
-        // Load recent scans
-        async function loadRecentScans() {
+        
+        async function loadScans() {
             try {
                 const scans = await fetchJSON('/api/scans');
-                const tbody = document.getElementById('recentScansTable');
-                
-                if (!scans.length) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">No scans yet. Start a new scan!</td></tr>';
-                    return;
-                }
-                
-                tbody.innerHTML = '';
-                const recentScans = scans.slice(0, 5);
-                
-                for (const scan of recentScans) {
-                    const started = new Date(scan.started_at).toLocaleString();
-                    const duration = scan.duration_seconds ? `${scan.duration_seconds}s` : '--';
-                    const statusBadge = scan.status === 'completed' ? '<span class="badge badge-info">Completed</span>' : '<span class="badge badge-warning">Pending</span>';
-                    
-                    // Get issues count for this scan
-                    let issuesHtml = '--';
-                    if (scan.status === 'completed') {
-                        const scanDetail = await fetchJSON(`/api/scans/${scan.id}`);
-                        const vulns = scanDetail.vulnerabilities || [];
-                        const criticalCount = vulns.filter(v => v.severity === 'critical').length;
-                        const highCount = vulns.filter(v => v.severity === 'high').length;
-                        issuesHtml = `<span class="badge badge-critical">${criticalCount}</span> <span class="badge badge-high">${highCount}</span>`;
-                    }
-                    
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${escapeHtml(scan.target_url)}</td>
-                            <td>${started}</td>
-                            <td>${duration}</td>
-                            <td>${issuesHtml}</td>
-                            <td>${statusBadge}</td>
-                            <td><button class="btn btn-sm btn-outline" onclick="alert('Report view coming soon')">View Report</button></td>
-                        </tr>
-                    `;
-                }
-            } catch (err) {
-                console.error('Failed to load scans:', err);
-                document.getElementById('recentScansTable').innerHTML = '<tr><td colspan="6" style="text-align:center">Error loading scans</td></tr>';
-            }
+                const tbody = document.getElementById('scansTable');
+                if (!scans.length) { tbody.innerHTML = '<tr><td colspan="4">No scans yet</td></tr>'; return; }
+                tbody.innerHTML = scans.slice(0,5).map(s => `<tr><td>${s.target_url}</td><td>${new Date(s.started_at).toLocaleString()}</td><td><span class="badge ${s.status === 'completed' ? 'badge-critical' : ''}">${s.status}</span></td><td><button class="btn btn-sm btn-outline" onclick="alert('View report')">View</button></td></tr>`).join('');
+            } catch(e) { console.error(e); }
         }
-
-        // Load critical issues
+        
         async function loadCriticalIssues() {
             try {
                 const vulns = await fetchJSON('/api/vulnerabilities?severity=critical&status=open');
                 const container = document.getElementById('criticalIssuesList');
-                
-                if (!vulns.length) {
-                    container.innerHTML = '<div class="issue-item"><div class="issue-content"><p>No critical open issues. Great job!</p></div></div>';
-                    return;
-                }
-                
-                container.innerHTML = '';
-                vulns.forEach(v => {
-                    const issueDiv = document.createElement('div');
-                    issueDiv.className = 'issue-item critical';
-                    issueDiv.innerHTML = `
-                        <div class="issue-icon"><i class="fas fa-exclamation-triangle"></i></div>
-                        <div class="issue-content">
-                            <h4>${escapeHtml(v.title)}</h4>
-                            <p>${escapeHtml(v.description || 'No description')}</p>
-                            <div class="issue-meta">
-                                <span><i class="fas fa-code"></i> ${escapeHtml(v.location || 'Unknown')}</span>
-                                <span><i class="fas fa-calendar"></i> Detected ${new Date(v.created_at).toLocaleString()}</span>
-                                <span><i class="fas fa-user"></i> ${v.severity.toUpperCase()} Risk</span>
-                            </div>
-                        </div>
-                        <div class="issue-actions">
-                            <button class="btn btn-sm btn-danger" onclick="fixVulnerability(${v.id})">Fix Now</button>
-                            <button class="btn btn-sm btn-outline" onclick="ignoreVulnerability(${v.id})">Ignore</button>
-                        </div>
-                    `;
-                    container.appendChild(issueDiv);
-                });
-            } catch (err) {
-                console.error('Failed to load critical issues:', err);
-            }
+                if (!vulns.length) { container.innerHTML = '<p>No critical issues! Great job!</p>'; return; }
+                container.innerHTML = vulns.map(v => `<div class="issue-item critical"><div><strong>${v.title}</strong><br><small>${v.location || 'Unknown'}</small></div><button class="btn btn-sm btn-danger" onclick="fixVuln(${v.id})">Fix</button></div>`).join('');
+            } catch(e) { console.error(e); }
         }
-
-        // Fix vulnerability
-        async function fixVulnerability(id) {
+        
+        async function fixVuln(id) {
             try {
-                await fetchJSON(`/api/vulnerabilities/${id}/status`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: 'fixed' })
-                });
-                alert('Vulnerability marked as fixed. Refreshing...');
+                await fetchJSON(`/api/vulnerabilities/${id}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'fixed' }) });
+                alert('Fixed! Refreshing...');
                 location.reload();
-            } catch (err) {
-                alert('Failed to fix: ' + err.message);
-            }
+            } catch(e) { alert('Error: ' + e.message); }
         }
-
-        // Ignore vulnerability
-        async function ignoreVulnerability(id) {
-            try {
-                await fetchJSON(`/api/vulnerabilities/${id}/status`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: 'false_positive' })
-                });
-                alert('Vulnerability ignored. Refreshing...');
-                location.reload();
-            } catch (err) {
-                alert('Failed to ignore: ' + err.message);
-            }
-        }
-
-        // Fix all critical
-        async function fixAllCritical() {
-            try {
-                const vulns = await fetchJSON('/api/vulnerabilities?severity=critical&status=open');
-                for (const v of vulns) {
-                    await fetchJSON(`/api/vulnerabilities/${v.id}/status`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ status: 'fixed' })
-                    });
-                }
-                alert('All critical issues marked as fixed. Refreshing...');
-                location.reload();
-            } catch (err) {
-                alert('Error: ' + err.message);
-            }
-        }
-
-        // Load trends and update chart
-        async function loadTrends() {
+        
+        async function loadCharts() {
             try {
                 const trends = await fetchJSON('/api/dashboard/trends');
-                if (vulnerabilityChart) {
-                    vulnerabilityChart.data.datasets[0].data = trends.critical;
-                    vulnerabilityChart.data.datasets[1].data = trends.high;
-                    vulnerabilityChart.data.datasets[2].data = trends.medium;
-                    vulnerabilityChart.update();
-                }
-            } catch (err) {
-                console.error('Failed to load trends:', err);
-            }
-        }
-
-        // Update threat distribution chart
-        async function updateThreatChart() {
-            try {
-                const vulns = await fetchJSON('/api/vulnerabilities');
-                const severityCounts = { critical: 0, high: 0, medium: 0, low: 0 };
-                vulns.forEach(v => { severityCounts[v.severity]++; });
+                if (trendChart) trendChart.destroy();
+                const ctx = document.getElementById('trendChart').getContext('2d');
+                trendChart = new Chart(ctx, { type: 'line', data: { labels: trends.labels, datasets: [{ label: 'Critical', data: trends.critical, borderColor: '#ff3e41' }, { label: 'High', data: trends.high, borderColor: '#ff9800' }, { label: 'Medium', data: trends.medium, borderColor: '#ffc107' }] } });
                 
-                if (threatChart) {
-                    threatChart.data.datasets[0].data = [severityCounts.critical, severityCounts.high, severityCounts.medium, severityCounts.low];
-                    threatChart.update();
-                }
-            } catch (err) {
-                console.error('Failed to update threat chart:', err);
+                const vulns = await fetchJSON('/api/vulnerabilities');
+                const counts = { critical:0, high:0, medium:0, low:0 };
+                vulns.forEach(v => counts[v.severity]++);
+                if (threatChart) threatChart.destroy();
+                const ctx2 = document.getElementById('threatChart').getContext('2d');
+                threatChart = new Chart(ctx2, { type: 'doughnut', data: { labels: ['Critical', 'High', 'Medium', 'Low'], datasets: [{ data: [counts.critical, counts.high, counts.medium, counts.low], backgroundColor: ['#ff3e41','#ff9800','#ffc107','#4caf50'] }] } });
+            } catch(e) { console.error(e); }
+        }
+        
+        async function logout() { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); window.location.href = '/login.html'; }
+        
+        window.onload = async () => {
+            if (await checkAuth()) {
+                await loadDashboard();
+                await loadScans();
+                await loadCriticalIssues();
+                await loadCharts();
+                document.getElementById('logoutBtn').onclick = logout;
             }
-        }
-
-        // Initialize charts
-        function initCharts() {
-            const vulnCtx = document.getElementById('vulnerabilityChart').getContext('2d');
-            vulnerabilityChart = new Chart(vulnCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                    datasets: [
-                        { label: 'Critical', data: [0,0,0,0,0,0,0], borderColor: '#ff3e41', backgroundColor: 'rgba(255,62,65,0.1)', tension: 0.4 },
-                        { label: 'High', data: [0,0,0,0,0,0,0], borderColor: '#ff9800', backgroundColor: 'rgba(255,152,0,0.1)', tension: 0.4 },
-                        { label: 'Medium', data: [0,0,0,0,0,0,0], borderColor: '#ffc107', backgroundColor: 'rgba(255,193,7,0.1)', tension: 0.4 }
-                    ]
-                },
-                options: { responsive: true, plugins: { legend: { position: 'top' } } }
-            });
-            
-            const threatCtx = document.getElementById('threatChart').getContext('2d');
-            threatChart = new Chart(threatCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Critical', 'High', 'Medium', 'Low'],
-                    datasets: [{ data: [0,0,0,0], backgroundColor: ['#ff3e41','#ff9800','#ffc107','#4caf50'] }]
-                },
-                options: { responsive: true, plugins: { legend: { position: 'right' } } }
-            });
-        }
-
-        // Logout
-        async function logout() {
-            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-            window.location.href = '/login.html';
-        }
-
-        // Helper function
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]);
-        }
-
-        // Initialize everything
-        window.addEventListener('DOMContentLoaded', async () => {
-            const authenticated = await checkAuth();
-            if (!authenticated) return;
-            
-            initCharts();
-            await loadStats();
-            await loadRecentScans();
-            await loadCriticalIssues();
-            await loadTrends();
-            await updateThreatChart();
-            
-            document.getElementById('logoutBtn').addEventListener('click', logout);
-            document.getElementById('fixAllCriticalBtn').addEventListener('click', fixAllCritical);
-        });
+        };
     </script>
 </body>
 </html>
