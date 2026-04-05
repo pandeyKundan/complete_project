@@ -31,14 +31,14 @@
         .badge { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
         .badge-critical { background: #ff3e41; }
         .badge-high { background: #ff9800; }
-        .badge-medium { background: #ffc107; color: #333; }
+        .badge-info { background: #2a75ff; }
         .table { width: 100%; border-collapse: collapse; }
         .table th, .table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .issue-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .issue-item.critical { background: rgba(255,62,65,0.1); }
-        .btn { padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 500; }
-        .btn-primary { background: #2a75ff; border: none; color: white; }
-        .btn-danger { background: #ff3e41; border: none; color: white; }
+        .btn { padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 500; border: none; }
+        .btn-primary { background: #2a75ff; color: white; }
+        .btn-danger { background: #ff3e41; color: white; }
         .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: white; }
         .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
         .chart-container { height: 300px; }
@@ -69,7 +69,7 @@
     <main class="main-content">
         <div style="margin-bottom: 2rem;">
             <h1>Security Dashboard</h1>
-            <p id="lastScanInfo">Loading...</p>
+            <p id="lastScanInfo">Loading dashboard data...</p>
         </div>
 
         <div class="grid grid-cols-4">
@@ -86,12 +86,12 @@
 
         <div class="card">
             <div style="display:flex; justify-content:space-between; margin-bottom:1rem;"><h3>Recent Scans</h3><a href="scanner.html" class="btn btn-primary">New Scan</a></div>
-            <table class="table"><thead><tr><th>Target URL</th><th>Started</th><th>Status</th><th>Actions</th></tr></thead><tbody id="scansTable"><tr><td colspan="4">Loading...</td></tr></tbody></table>
+            <table class="table"><thead><tr><th>Target URL</th><th>Started</th><th>Status</th><th>Actions</th></tr></thead><tbody id="scansTable"><tr><td colspan="4">Loading scans...</td></tr></tbody></table>
         </div>
 
         <div class="card">
             <h3>Critical Issues</h3>
-            <div id="criticalIssuesList">Loading...</div>
+            <div id="criticalIssuesList">Loading critical issues...</div>
         </div>
     </main>
 
@@ -100,7 +100,10 @@
         
         async function fetchJSON(url, options = {}) {
             const res = await fetch(url, { ...options, credentials: 'include' });
-            if (!res.ok) throw new Error(await res.text());
+            if (!res.ok) {
+                const error = await res.text();
+                throw new Error(error || `HTTP ${res.status}`);
+            }
             return res.json();
         }
         
@@ -109,7 +112,11 @@
                 const data = await fetchJSON('/api/auth/me');
                 document.getElementById('userName').innerText = data.user.first_name + ' ' + data.user.last_name;
                 return true;
-            } catch(e) { window.location.href = '/login.html'; return false; }
+            } catch(e) { 
+                console.log('Not authenticated, redirecting to login...');
+                window.location.href = '/login.html'; 
+                return false; 
+            }
         }
         
         async function loadDashboard() {
@@ -117,38 +124,76 @@
                 const stats = await fetchJSON('/api/dashboard/stats');
                 document.getElementById('securityScore').innerText = stats.securityScore + '%';
                 document.getElementById('scoreBar').style.width = stats.securityScore + '%';
-                document.getElementById('criticalIssues').innerText = stats.criticalIssues;
-                document.getElementById('totalVulns').innerText = stats.totalVulnerabilities;
-                if (stats.recentScans && stats.recentScans.length) {
-                    document.getElementById('lastScanInfo').innerHTML = `Last scan: ${new Date(stats.recentScans[0].startedAt).toLocaleString()}`;
+                document.getElementById('criticalIssues').innerText = stats.criticalIssues || 0;
+                document.getElementById('totalVulns').innerText = stats.totalVulnerabilities || 0;
+                
+                if (stats.recentScans && stats.recentScans.length > 0) {
+                    const lastScan = new Date(stats.recentScans[0].startedAt).toLocaleString();
+                    document.getElementById('lastScanInfo').innerHTML = `Last scan: ${lastScan}`;
                 }
-            } catch(e) { console.error(e); }
+            } catch(e) { 
+                console.error('Dashboard load error:', e);
+                document.getElementById('securityScore').innerText = 'Error';
+            }
         }
         
         async function loadScans() {
             try {
                 const scans = await fetchJSON('/api/scans');
                 const tbody = document.getElementById('scansTable');
-                if (!scans.length) { tbody.innerHTML = '<tr><td colspan="4">No scans yet</td></tr>'; return; }
-                tbody.innerHTML = scans.slice(0,5).map(s => `<tr><td>${s.target_url}</td><td>${new Date(s.started_at).toLocaleString()}</td><td><span class="badge ${s.status === 'completed' ? 'badge-critical' : ''}">${s.status}</span></td><td><button class="btn btn-sm btn-outline" onclick="alert('View report')">View</button></td></tr>`).join('');
-            } catch(e) { console.error(e); }
+                if (!scans || scans.length === 0) { 
+                    tbody.innerHTML = '<tr><td colspan="4">No scans yet. Start a new scan!</td></tr>'; 
+                    return; 
+                }
+                tbody.innerHTML = scans.slice(0,5).map(s => `
+                    <tr>
+                        <td>${escapeHtml(s.target_url)}</td>
+                        <td>${new Date(s.started_at).toLocaleString()}</td>
+                        <td><span class="badge ${s.status === 'completed' ? 'badge-info' : ''}">${s.status}</span></td>
+                        <td><button class="btn btn-sm btn-outline" onclick="alert('View report feature coming soon')">View</button></td>
+                    </tr>
+                `).join('');
+            } catch(e) { 
+                console.error('Scans load error:', e);
+                document.getElementById('scansTable').innerHTML = '<tr><td colspan="4">Error loading scans</td></tr>';
+            }
         }
         
         async function loadCriticalIssues() {
             try {
                 const vulns = await fetchJSON('/api/vulnerabilities?severity=critical&status=open');
                 const container = document.getElementById('criticalIssuesList');
-                if (!vulns.length) { container.innerHTML = '<p>No critical issues! Great job!</p>'; return; }
-                container.innerHTML = vulns.map(v => `<div class="issue-item critical"><div><strong>${v.title}</strong><br><small>${v.location || 'Unknown'}</small></div><button class="btn btn-sm btn-danger" onclick="fixVuln(${v.id})">Fix</button></div>`).join('');
-            } catch(e) { console.error(e); }
+                if (!vulns || vulns.length === 0) { 
+                    container.innerHTML = '<p>✅ No critical issues! Great job!</p>'; 
+                    return; 
+                }
+                container.innerHTML = vulns.map(v => `
+                    <div class="issue-item critical">
+                        <div>
+                            <strong>${escapeHtml(v.title)}</strong><br>
+                            <small>${escapeHtml(v.location || 'Unknown location')}</small>
+                        </div>
+                        <button class="btn btn-sm btn-danger" onclick="fixVuln(${v.id})">Fix Now</button>
+                    </div>
+                `).join('');
+            } catch(e) { 
+                console.error('Critical issues load error:', e);
+                document.getElementById('criticalIssuesList').innerHTML = '<p>Error loading issues</p>';
+            }
         }
         
         async function fixVuln(id) {
             try {
-                await fetchJSON(`/api/vulnerabilities/${id}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'fixed' }) });
-                alert('Fixed! Refreshing...');
+                await fetchJSON(`/api/vulnerabilities/${id}/status`, { 
+                    method: 'PUT', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ status: 'fixed' }) 
+                });
+                alert('Vulnerability marked as fixed! Refreshing...');
                 location.reload();
-            } catch(e) { alert('Error: ' + e.message); }
+            } catch(e) { 
+                alert('Error: ' + e.message); 
+            }
         }
         
         async function loadCharts() {
@@ -156,21 +201,50 @@
                 const trends = await fetchJSON('/api/dashboard/trends');
                 if (trendChart) trendChart.destroy();
                 const ctx = document.getElementById('trendChart').getContext('2d');
-                trendChart = new Chart(ctx, { type: 'line', data: { labels: trends.labels, datasets: [{ label: 'Critical', data: trends.critical, borderColor: '#ff3e41' }, { label: 'High', data: trends.high, borderColor: '#ff9800' }, { label: 'Medium', data: trends.medium, borderColor: '#ffc107' }] } });
+                trendChart = new Chart(ctx, { 
+                    type: 'line', 
+                    data: { 
+                        labels: trends.labels || ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], 
+                        datasets: [
+                            { label: 'Critical', data: trends.critical || [0,0,0,0,0,0,0], borderColor: '#ff3e41', tension: 0.4 },
+                            { label: 'High', data: trends.high || [0,0,0,0,0,0,0], borderColor: '#ff9800', tension: 0.4 },
+                            { label: 'Medium', data: trends.medium || [0,0,0,0,0,0,0], borderColor: '#ffc107', tension: 0.4 }
+                        ]
+                    }
+                });
                 
                 const vulns = await fetchJSON('/api/vulnerabilities');
                 const counts = { critical:0, high:0, medium:0, low:0 };
-                vulns.forEach(v => counts[v.severity]++);
+                vulns.forEach(v => { if(counts[v.severity] !== undefined) counts[v.severity]++; });
+                
                 if (threatChart) threatChart.destroy();
                 const ctx2 = document.getElementById('threatChart').getContext('2d');
-                threatChart = new Chart(ctx2, { type: 'doughnut', data: { labels: ['Critical', 'High', 'Medium', 'Low'], datasets: [{ data: [counts.critical, counts.high, counts.medium, counts.low], backgroundColor: ['#ff3e41','#ff9800','#ffc107','#4caf50'] }] } });
-            } catch(e) { console.error(e); }
+                threatChart = new Chart(ctx2, { 
+                    type: 'doughnut', 
+                    data: { 
+                        labels: ['Critical', 'High', 'Medium', 'Low'], 
+                        datasets: [{ 
+                            data: [counts.critical, counts.high, counts.medium, counts.low], 
+                            backgroundColor: ['#ff3e41','#ff9800','#ffc107','#4caf50'] 
+                        }] 
+                    } 
+                });
+            } catch(e) { console.error('Charts error:', e); }
         }
         
-        async function logout() { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); window.location.href = '/login.html'; }
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]);
+        }
+        
+        async function logout() { 
+            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); 
+            window.location.href = '/login.html'; 
+        }
         
         window.onload = async () => {
-            if (await checkAuth()) {
+            const authenticated = await checkAuth();
+            if (authenticated) {
                 await loadDashboard();
                 await loadScans();
                 await loadCriticalIssues();
