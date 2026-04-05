@@ -13,6 +13,7 @@
             gap: 1rem;
             margin-bottom: 2rem;
             flex-wrap: wrap;
+            align-items: center;
         }
         
         .report-cards {
@@ -36,22 +37,6 @@
             box-shadow: 0 10px 30px rgba(42, 117, 255, 0.1);
         }
         
-        .report-card.critical {
-            border-left: 4px solid #ff3e41;
-        }
-        
-        .report-card.high {
-            border-left: 4px solid #ff9800;
-        }
-        
-        .report-card.medium {
-            border-left: 4px solid #ffc107;
-        }
-        
-        .report-card.low {
-            border-left: 4px solid #4caf50;
-        }
-        
         .report-meta {
             display: flex;
             justify-content: space-between;
@@ -66,54 +51,55 @@
             font-weight: 600;
         }
         
-        .report-stats {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-        
-        .stat-pill {
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        
         .report-actions {
             display: flex;
             gap: 0.5rem;
             margin-top: 1rem;
         }
         
-        .export-options {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-        
-        .export-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
             justify-content: center;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            cursor: pointer;
-            transition: all 0.3s;
+            align-items: center;
         }
         
-        .export-btn:hover {
-            background: var(--primary);
-            border-color: var(--primary);
-        }
-        
-        .report-preview {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
+        .modal-content {
+            background: #0a192f;
             padding: 2rem;
-            margin-top: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid var(--primary);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .close-btn:hover {
+            color: var(--primary);
         }
         
         .preview-header {
@@ -155,31 +141,53 @@
             margin-bottom: 2rem;
         }
         
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.7);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
+        .detail-section {
+            margin-bottom: 2rem;
         }
-        .modal-content {
-            background: #0a192f;
-            padding: 2rem;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 500px;
-            border: 1px solid var(--primary);
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
+        
+        .detail-section h3 {
             margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
+        
+        .export-options {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        
+        .export-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .export-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .badge-critical { background: #ff3e41; color: white; }
+        .badge-high { background: #ff9800; color: white; }
+        .badge-medium { background: #ffc107; color: #333; }
+        .badge-low { background: #4caf50; color: white; }
     </style>
 </head>
 <body>
@@ -250,63 +258,72 @@
             <p>Generate, view, and export comprehensive security reports</p>
         </div>
 
-        <!-- Report Filters & Actions -->
+        <!-- Report Actions -->
         <div class="card">
             <div class="report-filters">
+                <input type="text" id="searchReports" class="form-control" placeholder="Search reports..." style="width: 250px;">
                 <button class="btn btn-primary" id="generateReportBtn">
                     <i class="fas fa-plus"></i> Generate New Report
                 </button>
-                <input type="text" id="searchReports" class="form-control" placeholder="Search reports..." style="width: 200px;">
+                <button class="btn btn-outline" id="refreshReportsBtn">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
             </div>
         </div>
 
-        <!-- Report Cards (dynamic) -->
+        <!-- Report Cards Container -->
         <div id="reportsContainer" class="report-cards">
             <div style="grid-column:1/-1; text-align:center">Loading reports...</div>
         </div>
-
-        <!-- Report Preview Modal -->
-        <div id="reportPreviewModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Report Preview</h2>
-                    <button class="btn btn-outline" onclick="closePreview()">×</button>
-                </div>
-                <div id="previewContent">
-                    <!-- dynamic content -->
-                </div>
-                <div class="export-options" style="justify-content:center; margin-top:1rem;">
-                    <div class="export-btn" onclick="exportReport('json')" title="Export as JSON">
-                        <i class="fas fa-file-code"></i>
-                    </div>
-                    <div class="export-btn" onclick="printReport()" title="Print Report">
-                        <i class="fas fa-print"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Generate Report Modal (choose scan) -->
-        <div id="generateModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Generate Report from Scan</h3>
-                    <button class="btn btn-outline" onclick="closeGenerateModal()">×</button>
-                </div>
-                <div class="form-group">
-                    <label>Select Scan</label>
-                    <select id="scanSelect" class="form-control">
-                        <option>Loading scans...</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Report Title</label>
-                    <input type="text" id="reportTitle" class="form-control" placeholder="e.g., Security Scan Report">
-                </div>
-                <button class="btn btn-primary" onclick="generateReport()">Generate</button>
-            </div>
-        </div>
     </main>
+
+    <!-- Generate Report Modal -->
+    <div id="generateModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Generate Report from Scan</h3>
+                <button class="close-btn" onclick="closeGenerateModal()">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Select Completed Scan</label>
+                <select id="scanSelect" class="form-control">
+                    <option>Loading scans...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Report Title</label>
+                <input type="text" id="reportTitle" class="form-control" placeholder="e.g., Security Scan Report - example.com">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Report Type</label>
+                <select id="reportType" class="form-control">
+                    <option value="scan">Scan Report</option>
+                    <option value="compliance">Compliance Report</option>
+                    <option value="summary">Summary Report</option>
+                </select>
+            </div>
+            <button class="btn btn-primary btn-block" onclick="generateReport()">Generate Report</button>
+        </div>
+    </div>
+
+    <!-- Report Preview Modal -->
+    <div id="previewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="previewTitle">Report Preview</h2>
+                <button class="close-btn" onclick="closePreview()">&times;</button>
+            </div>
+            <div id="previewContent"></div>
+            <div class="export-options">
+                <div class="export-btn" onclick="exportReportAsJSON()" title="Export as JSON">
+                    <i class="fas fa-file-code"></i>
+                </div>
+                <div class="export-btn" onclick="printReport()" title="Print Report">
+                    <i class="fas fa-print"></i>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Scanner Animation -->
     <div class="scanner-line"></div>
@@ -320,9 +337,12 @@
         let currentPreviewReport = null;
         let allScans = [];
 
-        // Helper: fetch JSON
+        // Helper function for API calls
         async function fetchJSON(url, options = {}) {
-            const res = await fetch(url, options);
+            const res = await fetch(url, {
+                ...options,
+                credentials: 'include'
+            });
             if (!res.ok) {
                 const err = await res.json().catch(() => ({ error: 'Request failed' }));
                 throw new Error(err.error || `HTTP ${res.status}`);
@@ -330,13 +350,14 @@
             return res.json();
         }
 
-        // Authentication check
+        // Check authentication
         async function checkAuth() {
             try {
                 const data = await fetchJSON('/api/auth/me');
                 document.getElementById('userName').innerText = data.user.first_name + ' ' + data.user.last_name;
                 return true;
             } catch (err) {
+                console.error('Auth error:', err);
                 window.location.href = '/login.html';
                 return false;
             }
@@ -349,7 +370,7 @@
                 allReports = reports;
                 renderReports();
             } catch (err) {
-                console.error(err);
+                console.error('Failed to load reports:', err);
                 document.getElementById('reportsContainer').innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red">Failed to load reports</div>';
             }
         }
@@ -358,25 +379,22 @@
         function renderReports() {
             const container = document.getElementById('reportsContainer');
             const searchTerm = document.getElementById('searchReports').value.toLowerCase();
+            
             let filtered = allReports;
             if (searchTerm) {
                 filtered = allReports.filter(r => r.title.toLowerCase().includes(searchTerm));
             }
+            
             if (filtered.length === 0) {
                 container.innerHTML = '<div style="grid-column:1/-1; text-align:center">No reports found. Generate one!</div>';
                 return;
             }
+            
             container.innerHTML = '';
             filtered.forEach(report => {
-                // Determine card border based on report type or severity (if any)
-                let cardClass = '';
-                if (report.report_type === 'critical') cardClass = 'critical';
-                else if (report.report_type === 'high') cardClass = 'high';
-                else if (report.report_type === 'medium') cardClass = 'medium';
-                else cardClass = 'low';
                 const date = new Date(report.generated_at).toLocaleString();
                 const card = document.createElement('div');
-                card.className = `report-card ${cardClass}`;
+                card.className = 'report-card';
                 card.onclick = () => showReport(report.id);
                 card.innerHTML = `
                     <div class="report-meta">
@@ -386,24 +404,24 @@
                     <h3 class="report-title">${escapeHtml(report.title)}</h3>
                     <p>Click to view full report details.</p>
                     <div class="report-actions" onclick="event.stopPropagation()">
-                        <button class="btn btn-sm btn-outline" onclick="exportReportById(${report.id}, 'json')">JSON</button>
-                        <button class="btn btn-sm btn-outline" onclick="shareReport(${report.id})">Share</button>
+                        <button class="btn btn-sm btn-outline" onclick="exportReportById(${report.id})">Export JSON</button>
                     </div>
                 `;
                 container.appendChild(card);
             });
         }
 
-        // Show report preview by fetching full report content
+        // Show report preview
         async function showReport(reportId) {
             try {
                 const report = await fetchJSON(`/api/reports/${reportId}`);
                 currentPreviewReport = report;
                 const content = report.content;
-                const modal = document.getElementById('reportPreviewModal');
+                
                 const previewDiv = document.getElementById('previewContent');
+                document.getElementById('previewTitle').innerText = report.title;
+                
                 if (content && content.scan) {
-                    // Build preview HTML
                     previewDiv.innerHTML = `
                         <div class="preview-header">
                             <h2>${escapeHtml(report.title)}</h2>
@@ -411,20 +429,34 @@
                         </div>
                         <div class="executive-summary">
                             <h3>Executive Summary</h3>
-                            <p>Target: ${escapeHtml(content.scan.targetUrl)}</p>
-                            <p>Scan Type: ${content.scan.scanType}</p>
-                            <p>Security Score: ${content.scan.securityScore || 'N/A'}</p>
+                            <p><strong>Target:</strong> ${escapeHtml(content.scan.targetUrl)}</p>
+                            <p><strong>Scan Type:</strong> ${content.scan.scanType}</p>
+                            <p><strong>Security Score:</strong> ${content.scan.securityScore || 'N/A'}</p>
                             <div class="summary-grid">
-                                <div class="summary-item"><div class="summary-number">${content.summary.total}</div><div>Total Vulns</div></div>
-                                <div class="summary-item"><div class="summary-number">${content.summary.critical}</div><div>Critical</div></div>
-                                <div class="summary-item"><div class="summary-number">${content.summary.high}</div><div>High</div></div>
-                                <div class="summary-item"><div class="summary-number">${content.summary.medium}</div><div>Medium</div></div>
+                                <div class="summary-item">
+                                    <div class="summary-number">${content.summary.total}</div>
+                                    <div>Total Vulns</div>
+                                </div>
+                                <div class="summary-item">
+                                    <div class="summary-number" style="color: #ff3e41;">${content.summary.critical}</div>
+                                    <div>Critical</div>
+                                </div>
+                                <div class="summary-item">
+                                    <div class="summary-number" style="color: #ff9800;">${content.summary.high}</div>
+                                    <div>High</div>
+                                </div>
+                                <div class="summary-item">
+                                    <div class="summary-number" style="color: #ffc107;">${content.summary.medium}</div>
+                                    <div>Medium</div>
+                                </div>
                             </div>
                         </div>
                         <div class="detail-section">
                             <h3>Vulnerabilities Found</h3>
                             <table class="table">
-                                <thead><tr><th>Title</th><th>Severity</th><th>Location</th></tr></thead>
+                                <thead>
+                                    <tr><th>Title</th><th>Severity</th><th>Location</th></tr>
+                                </thead>
                                 <tbody>
                                     ${content.vulnerabilities.map(v => `
                                         <tr>
@@ -438,20 +470,19 @@
                         </div>
                         <div class="detail-section">
                             <h3>Recommendations</h3>
-                            <ul>${(content.vulnerabilities.map(v => `<li>${escapeHtml(v.remediation || 'No remediation provided')}</li>`).join('')) || '<li>No specific recommendations</li>'}</ul>
+                            <ul>
+                                ${content.vulnerabilities.map(v => `<li>${escapeHtml(v.remediation || 'No remediation provided')}</li>`).join('') || '<li>No specific recommendations</li>'}
+                            </ul>
                         </div>
                     `;
                 } else {
                     previewDiv.innerHTML = '<p>No detailed content available for this report.</p>';
                 }
-                modal.style.display = 'flex';
+                
+                document.getElementById('previewModal').style.display = 'flex';
             } catch (err) {
                 alert('Failed to load report details: ' + err.message);
             }
-        }
-
-        function closePreview() {
-            document.getElementById('reportPreviewModal').style.display = 'none';
         }
 
         // Load scans for report generation
@@ -463,10 +494,13 @@
                 if (allScans.length === 0) {
                     select.innerHTML = '<option disabled>No completed scans available</option>';
                 } else {
-                    select.innerHTML = allScans.map(s => `<option value="${s.id}">${s.target_url} (${new Date(s.started_at).toLocaleString()})</option>`).join('');
+                    select.innerHTML = allScans.map(s => 
+                        `<option value="${s.id}">${s.target_url} (${new Date(s.started_at).toLocaleString()})</option>`
+                    ).join('');
                 }
             } catch (err) {
                 console.error('Failed to load scans', err);
+                document.getElementById('scanSelect').innerHTML = '<option disabled>Error loading scans</option>';
             }
         }
 
@@ -480,10 +514,17 @@
             document.getElementById('generateModal').style.display = 'none';
         }
 
+        function closePreview() {
+            document.getElementById('previewModal').style.display = 'none';
+            currentPreviewReport = null;
+        }
+
         // Generate report from selected scan
         async function generateReport() {
             const scanId = document.getElementById('scanSelect').value;
             const title = document.getElementById('reportTitle').value.trim();
+            const reportType = document.getElementById('reportType').value;
+            
             if (!scanId || scanId === 'Loading scans...') {
                 alert('Please select a scan');
                 return;
@@ -492,22 +533,24 @@
                 alert('Please enter a report title');
                 return;
             }
+            
             try {
                 await fetchJSON('/api/reports/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ scanId, reportType: 'scan', title })
+                    body: JSON.stringify({ scanId, reportType, title })
                 });
                 alert('Report generated successfully!');
                 closeGenerateModal();
-                loadReports(); // refresh list
+                document.getElementById('reportTitle').value = '';
+                await loadReports();
             } catch (err) {
                 alert('Failed to generate report: ' + err.message);
             }
         }
 
-        // Export report as JSON (download)
-        function exportReportById(reportId, format) {
+        // Export report as JSON
+        function exportReportById(reportId) {
             const report = allReports.find(r => r.id === reportId);
             if (!report) return;
             const dataStr = JSON.stringify(report, null, 2);
@@ -520,7 +563,7 @@
             URL.revokeObjectURL(url);
         }
 
-        function exportReport(format) {
+        function exportReportAsJSON() {
             if (!currentPreviewReport) return;
             const dataStr = JSON.stringify(currentPreviewReport, null, 2);
             const blob = new Blob([dataStr], {type: 'application/json'});
@@ -532,44 +575,69 @@
             URL.revokeObjectURL(url);
         }
 
-        function shareReport(reportId) {
-            alert(`Share link: ${window.location.origin}/reports.html?id=${reportId}\n(Implement actual sharing if needed)`);
-        }
-
         function printReport() {
             const previewContent = document.getElementById('previewContent').innerHTML;
             const win = window.open('', '_blank');
             win.document.write(`
-                <html><head><title>Report</title>
-                <link rel="stylesheet" href="/styles/main.css">
-                <style>body { padding:2rem; background:white; color:black; }</style>
-                </head><body>${previewContent}</body></html>
+                <html>
+                    <head>
+                        <title>Report</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; padding: 2rem; }
+                            table { border-collapse: collapse; width: 100%; }
+                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                            th { background: #f0f0f0; }
+                            .summary-grid { display: flex; gap: 1rem; margin: 1rem 0; }
+                            .summary-item { text-align: center; padding: 1rem; background: #f5f5f5; border-radius: 8px; }
+                            .summary-number { font-size: 2rem; font-weight: bold; }
+                        </style>
+                    </head>
+                    <body>${previewContent}</body>
+                </html>
             `);
             win.document.close();
             win.print();
         }
 
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
-        }
-
         // Logout
         async function logout() {
-            await fetch('/api/auth/logout', { method: 'POST' });
+            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
             window.location.href = '/login.html';
         }
 
-        // Search listener
-        document.getElementById('searchReports').addEventListener('input', () => renderReports());
+        // Escape HTML helper
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, m => {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
 
         // Initialize
         window.addEventListener('DOMContentLoaded', async () => {
             const authenticated = await checkAuth();
             if (!authenticated) return;
+            
             await loadReports();
+            
+            // Search listener
+            document.getElementById('searchReports').addEventListener('input', () => renderReports());
+            
+            // Buttons
             document.getElementById('generateReportBtn').addEventListener('click', showGenerateModal);
+            document.getElementById('refreshReportsBtn').addEventListener('click', loadReports);
             document.getElementById('logoutBtn').addEventListener('click', logout);
+            
+            // Close modals when clicking outside
+            window.onclick = function(event) {
+                const generateModal = document.getElementById('generateModal');
+                const previewModal = document.getElementById('previewModal');
+                if (event.target === generateModal) closeGenerateModal();
+                if (event.target === previewModal) closePreview();
+            };
         });
     </script>
 </body>
