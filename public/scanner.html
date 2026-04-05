@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/main.css">
     <style>
-        /* Scanner specific styles */
         .scanner-container {
             max-width: 800px;
             margin: 0 auto;
@@ -125,7 +124,6 @@
     </style>
 </head>
 <body>
-    <!-- Header -->
     <header class="header">
         <div class="logo">
             <img src="https://via.placeholder.com/40x40" alt="Rakshak Logo">
@@ -155,7 +153,6 @@
         </div>
     </header>
 
-    <!-- Sidebar -->
     <aside class="sidebar">
         <ul class="sidebar-menu">
             <li class="sidebar-item">
@@ -186,7 +183,6 @@
         </ul>
     </aside>
 
-    <!-- Main Content -->
     <main class="main-content">
         <div class="page-header">
             <h1>Security Scanner</h1>
@@ -194,7 +190,6 @@
         </div>
 
         <div class="scanner-container">
-            <!-- Target Input -->
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title">Scan Target</h2>
@@ -211,25 +206,17 @@
                 
                 <div class="scan-type-selector">
                     <div class="scan-type-card active" data-scan-type="quick">
-                        <div class="scan-type-icon">
-                            <i class="fas fa-bolt"></i>
-                        </div>
+                        <div class="scan-type-icon"><i class="fas fa-bolt"></i></div>
                         <h4>Quick Scan</h4>
                         <p>Fast scan for common vulnerabilities (2-3 minutes)</p>
                     </div>
-                    
                     <div class="scan-type-card" data-scan-type="full">
-                        <div class="scan-type-icon">
-                            <i class="fas fa-search"></i>
-                        </div>
+                        <div class="scan-type-icon"><i class="fas fa-search"></i></div>
                         <h4>Full Scan</h4>
                         <p>Comprehensive scan with all tests (10-15 minutes)</p>
                     </div>
-                    
                     <div class="scan-type-card" data-scan-type="custom">
-                        <div class="scan-type-icon">
-                            <i class="fas fa-sliders-h"></i>
-                        </div>
+                        <div class="scan-type-icon"><i class="fas fa-sliders-h"></i></div>
                         <h4>Custom Scan</h4>
                         <p>Configure specific tests and parameters</p>
                     </div>
@@ -238,20 +225,11 @@
                 <div class="scan-parameters">
                     <h4>Advanced Settings</h4>
                     <div class="form-group">
-                        <label class="checkbox">
-                            <input type="checkbox" checked> Include SQL Injection tests
-                        </label>
-                        <label class="checkbox">
-                            <input type="checkbox" checked> Include XSS tests
-                        </label>
-                        <label class="checkbox">
-                            <input type="checkbox"> Include CSRF tests
-                        </label>
-                        <label class="checkbox">
-                            <input type="checkbox" checked> Include Directory Traversal tests
-                        </label>
+                        <label class="checkbox"><input type="checkbox" checked> Include SQL Injection tests</label>
+                        <label class="checkbox"><input type="checkbox" checked> Include XSS tests</label>
+                        <label class="checkbox"><input type="checkbox"> Include CSRF tests</label>
+                        <label class="checkbox"><input type="checkbox" checked> Include Directory Traversal tests</label>
                     </div>
-                    
                     <div class="form-group">
                         <label class="form-label">Authentication (Optional)</label>
                         <input type="text" class="form-control" placeholder="Username">
@@ -260,7 +238,6 @@
                 </div>
             </div>
 
-            <!-- Scan Progress -->
             <div class="card" id="scanProgress" style="display: none;">
                 <div class="card-header">
                     <h2 class="card-title">
@@ -269,7 +246,6 @@
                     </h2>
                     <span id="scanTimer">00:00</span>
                 </div>
-                
                 <div class="scan-progress">
                     <div class="progress">
                         <div class="progress-bar" id="progressBar" style="width: 0%"></div>
@@ -279,12 +255,10 @@
                         <span id="progressPercent">0%</span>
                     </div>
                 </div>
-                
                 <div class="current-test">
                     <h4>Current Test: <span id="currentTest">Starting scan...</span></h4>
                     <p id="testDescription">Please wait while the scan runs...</p>
                 </div>
-                
                 <div class="found-issues">
                     <h4>Issues Found: <span id="foundIssues">0</span></h4>
                     <div class="issues-count">
@@ -293,13 +267,11 @@
                         <span class="badge badge-medium" id="mediumCount">0 Medium</span>
                     </div>
                 </div>
-                
                 <button class="btn btn-danger btn-block" id="stopScanBtn">
                     <i class="fas fa-stop"></i> Stop Scan
                 </button>
             </div>
 
-            <!-- Scan Results -->
             <div class="card" id="scanResults" style="display: none;">
                 <div class="card-header">
                     <h2 class="card-title">Scan Results</h2>
@@ -307,29 +279,17 @@
                         <i class="fas fa-download"></i> Export Report
                     </button>
                 </div>
-                
                 <div class="scan-summary">
                     <div class="summary-stats grid grid-cols-3">
-                        <div class="stat-box">
-                            <h3 id="totalIssues">0</h3>
-                            <p>Total Issues</p>
-                        </div>
-                        <div class="stat-box">
-                            <h3 id="scanDuration">0s</h3>
-                            <p>Scan Duration</p>
-                        </div>
-                        <div class="stat-box">
-                            <h3 id="securityScore">100%</h3>
-                            <p>Security Score</p>
-                        </div>
+                        <div class="stat-box"><h3 id="totalIssues">0</h3><p>Total Issues</p></div>
+                        <div class="stat-box"><h3 id="scanDuration">0s</h3><p>Scan Duration</p></div>
+                        <div class="stat-box"><h3 id="securityScore">100%</h3><p>Security Score</p></div>
                     </div>
                 </div>
-                
                 <div class="scan-results">
                     <h4>Vulnerabilities Found:</h4>
                     <div id="resultsList"></div>
                 </div>
-                
                 <div class="recommendations">
                     <h4>Recommendations:</h4>
                     <ul id="recommendationsList"></ul>
@@ -338,12 +298,8 @@
         </div>
     </main>
 
-    <!-- Scanner Animation -->
     <div class="scanner-line"></div>
-
-    <!-- JavaScript -->
     <script src="js/main.js"></script>
-    <script src="js/scanner.js"></script>
     
     <script>
         let currentScanType = 'quick';
@@ -351,11 +307,10 @@
         let currentScanId = null;
         let scanStartTime = null;
 
-        // Helper function for API calls
         async function fetchJSON(url, options = {}) {
             const res = await fetch(url, {
                 ...options,
-                credentials: 'include'  // Important for session cookies
+                credentials: 'include'
             });
             if (!res.ok) {
                 const err = await res.json().catch(() => ({ error: 'Request failed' }));
@@ -364,24 +319,19 @@
             return res.json();
         }
 
-        // Check authentication
+        // SIMPLIFIED AUTH CHECK - Just check if logged in, don't redirect immediately
         async function checkAuth() {
             try {
                 const data = await fetchJSON('/api/auth/me');
                 document.getElementById('userName').innerText = data.user.first_name + ' ' + data.user.last_name;
-                
-                // Update critical badge
-                const stats = await fetchJSON('/api/dashboard/stats');
-                document.getElementById('criticalBadge').innerText = stats.criticalIssues || 0;
                 return true;
             } catch (err) {
-                console.error('Auth error:', err);
-                window.location.href = '/login.html';
+                console.log('Not authenticated');
+                window.location.href = '/login.html?redirect=scanner.html';
                 return false;
             }
         }
 
-        // Select scan type
         function selectScanType(type, element) {
             currentScanType = type;
             document.querySelectorAll('.scan-type-card').forEach(card => {
@@ -390,7 +340,6 @@
             if (element) element.classList.add('active');
         }
 
-        // Start scan
         async function startScan() {
             const targetUrl = document.getElementById('targetUrl').value.trim();
             if (!targetUrl) {
@@ -412,22 +361,17 @@
                 currentScanId = data.scanId;
                 scanStartTime = Date.now();
 
-                // Show progress card, hide results
                 document.getElementById('scanProgress').style.display = 'block';
                 document.getElementById('scanResults').style.display = 'none';
                 
-                // Reset progress display
                 document.getElementById('progressBar').style.width = '0%';
                 document.getElementById('progressPercent').innerText = '0%';
                 document.getElementById('foundIssues').innerText = '0';
                 document.getElementById('criticalCount').innerHTML = '0 Critical';
                 document.getElementById('highCount').innerHTML = '0 High';
                 document.getElementById('mediumCount').innerHTML = '0 Medium';
-                document.getElementById('currentTest').innerText = 'Scan initialized...';
-                document.getElementById('testDescription').innerText = 'Waiting for scan to start';
                 document.getElementById('scanTimer').innerText = '00:00';
                 
-                // Start polling for status
                 startPolling();
             } catch (err) {
                 alert('Failed to start scan: ' + err.message);
@@ -437,7 +381,6 @@
             }
         }
 
-        // Poll scan status
         function startPolling() {
             if (pollInterval) clearInterval(pollInterval);
             pollInterval = setInterval(async () => {
@@ -445,13 +388,11 @@
                 try {
                     const scan = await fetchJSON(`/api/scans/${currentScanId}`);
                     
-                    // Update progress
                     const progress = scan.progress || 0;
                     document.getElementById('progressBar').style.width = progress + '%';
                     document.getElementById('progressPercent').innerText = progress + '%';
                     document.getElementById('progressText').innerText = `Scanning... ${progress}% complete`;
                     
-                    // Update timer
                     if (scanStartTime && progress < 100) {
                         const elapsed = Math.floor((Date.now() - scanStartTime) / 1000);
                         const mins = Math.floor(elapsed / 60);
@@ -459,17 +400,6 @@
                         document.getElementById('scanTimer').innerText = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
                     }
                     
-                    // Update current test display
-                    if (progress < 100) {
-                        const tests = ['Initializing', 'Network Discovery', 'Port Scanning', 'SQL Injection', 'XSS Testing', 'CSRF Testing', 'Directory Traversal', 'SSL/TLS Analysis', 'Finalizing'];
-                        const testIndex = Math.floor(progress / 12);
-                        if (testIndex < tests.length) {
-                            document.getElementById('currentTest').innerText = tests[testIndex];
-                            document.getElementById('testDescription').innerText = `Testing for ${tests[testIndex].toLowerCase()} vulnerabilities...`;
-                        }
-                    }
-                    
-                    // Update vulnerability counts
                     const vulns = scan.vulnerabilities || [];
                     const criticalCount = vulns.filter(v => v.severity === 'critical').length;
                     const highCount = vulns.filter(v => v.severity === 'high').length;
@@ -479,7 +409,6 @@
                     document.getElementById('highCount').innerHTML = `${highCount} High`;
                     document.getElementById('mediumCount').innerHTML = `${mediumCount} Medium`;
                     
-                    // If scan completed, show results
                     if (scan.status === 'completed') {
                         clearInterval(pollInterval);
                         pollInterval = null;
@@ -489,44 +418,32 @@
                     console.error('Polling error:', err);
                     clearInterval(pollInterval);
                     pollInterval = null;
-                    alert('Error checking scan status: ' + err.message);
                 }
             }, 2000);
         }
 
-        // Stop scan (stop polling only - backend doesn't support cancellation yet)
         function stopScan() {
             if (pollInterval) {
                 clearInterval(pollInterval);
                 pollInterval = null;
             }
-            alert('Scan stopped. Results may be incomplete.');
+            alert('Scan stopped.');
             document.getElementById('scanProgress').style.display = 'none';
         }
 
-        // Show results after scan completes
         function showResults(scan) {
             document.getElementById('scanProgress').style.display = 'none';
             document.getElementById('scanResults').style.display = 'block';
             
             const vulns = scan.vulnerabilities || [];
-            const criticalCount = vulns.filter(v => v.severity === 'critical').length;
-            const highCount = vulns.filter(v => v.severity === 'high').length;
-            const mediumCount = vulns.filter(v => v.severity === 'medium').length;
             const total = vulns.length;
             
             document.getElementById('totalIssues').innerText = total;
-            
-            // Calculate duration
             const duration = scan.duration_seconds || 0;
-            const mins = Math.floor(duration / 60);
-            const secs = duration % 60;
-            document.getElementById('scanDuration').innerText = mins > 0 ? `${mins}m ${secs}s` : `${duration}s`;
-            
+            document.getElementById('scanDuration').innerText = `${duration}s`;
             const score = scan.security_score || 100;
             document.getElementById('securityScore').innerText = score + '%';
             
-            // Build vulnerabilities list
             const resultsList = document.getElementById('resultsList');
             resultsList.innerHTML = '';
             
@@ -550,7 +467,6 @@
                 });
             }
             
-            // Generate recommendations
             const recList = document.getElementById('recommendationsList');
             recList.innerHTML = '';
             const recommendationsSet = new Set();
@@ -559,7 +475,7 @@
             });
             
             if (recommendationsSet.size === 0) {
-                recList.innerHTML = '<li>No specific recommendations. Your application appears secure.</li>';
+                recList.innerHTML = '<li>No specific recommendations.</li>';
             } else {
                 recommendationsSet.forEach(rec => {
                     const li = document.createElement('li');
@@ -569,14 +485,13 @@
             }
         }
 
-        // Export report
         async function exportReport() {
             if (!currentScanId) {
                 alert('No scan to export');
                 return;
             }
             try {
-                const reportData = await fetchJSON('/api/reports/generate', {
+                await fetchJSON('/api/reports/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
@@ -585,30 +500,26 @@
                         title: `Scan Report ${new Date().toLocaleString()}` 
                     })
                 });
-                alert(`Report generated! You can view it in the Reports page.`);
+                alert('Report generated! View it in Reports page.');
             } catch (err) {
                 alert('Could not generate report: ' + err.message);
             }
         }
 
-        // Logout
         async function logout() {
             await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
             window.location.href = '/login.html';
         }
 
-        // Helper function
         function escapeHtml(str) {
             if (!str) return '';
             return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]);
         }
 
-        // Initialize
         window.addEventListener('DOMContentLoaded', async () => {
             const authenticated = await checkAuth();
             if (!authenticated) return;
             
-            // Setup scan type selection
             document.querySelectorAll('.scan-type-card').forEach(card => {
                 card.addEventListener('click', (e) => {
                     const type = card.getAttribute('data-scan-type');
@@ -616,7 +527,6 @@
                 });
             });
             
-            // Setup buttons
             document.getElementById('startScanBtn').addEventListener('click', startScan);
             document.getElementById('stopScanBtn').addEventListener('click', stopScan);
             document.getElementById('exportReportBtn').addEventListener('click', exportReport);
