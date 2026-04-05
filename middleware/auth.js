@@ -5,4 +5,4 @@ function isAuthenticated(req, res, next) {
   res.status(401).json({ error: 'Unauthorized' });
 }
 
-module.exports = { isAuthenticated };
+module.exports = { isAuthenticated };  // <-- Export as object
