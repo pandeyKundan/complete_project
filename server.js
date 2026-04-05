@@ -14,6 +14,7 @@ const { errorHandler } = require('./middleware/errorHandler');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({ origin: true, credentials: true }));
@@ -34,8 +35,7 @@ app.use('/api/vulnerabilities', vulnerabilityRoutes);
 app.use('/api/scans', scanRoutes);
 app.use('/api/reports', reportRoutes);
 
-// ========== IMPORTANT FIX: Serve index.html for root path ==========
-// This sends the HOMEPAGE (landing page) when someone visits /
+// ========== FIX: Serve index.html at root path ==========
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -48,6 +48,7 @@ app.use('/api/*', (req, res) => {
 // Error handler
 app.use(errorHandler);
 
+// Start server
 initDatabase().then(() => {
   app.listen(PORT, () => {
     console.log(`🚀 Rakshak backend running on http://localhost:${PORT}`);
