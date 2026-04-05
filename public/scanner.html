@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>֎🇦🇮 Rakshak - Security Reports</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/main.css">
+    <style>
+        .report-filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .date-range {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .report-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .report-card {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .report-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(42, 117, 255, 0.1);
+        }
+        
+        .report-card.critical {
+            border-left: 4px solid #ff3e41;
+        }
+        
+        .report-card.high {
+            border-left: 4px solid #ff9800;
+        }
+        
+        .report-card.medium {
+            border-left: 4px solid #ffc107;
+        }
+        
+        .report-card.low {
+            border-left: 4px solid #4caf50;
+        }
+        
+        .report-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .report-title {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .report-stats {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .stat-pill {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .report-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .export-options {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .export-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .export-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .report-preview {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .preview-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        .executive-summary {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .summary-item {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+        
+        .summary-number {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        .vuln-chart {
+            height: 300px;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <img src="https://via.placeholder.com/40x40" alt="Rakshak Logo">
+            <span class="logo-text">RAKSHAK</span>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="scanner.html">Scanner</a></li>
+            <li><a href="reports.html" class="active">Reports</a></li>
+            <li><a href="vulnerabilities.html">Vulnerabilities</a></li>
+        </ul>
+        <div class="user-menu">
+            <div class="user-avatar">
+                <img src="https://via.placeholder.com/40x40" alt="User Avatar">
+            </div>
+            <div class="user-info">
+                <span class="user-name">Kundan Kumar</span>
+                <span class="user-role">Security Analyst</span>
+            </div>
+            <div class="dropdown">
+                <i class="fas fa-chevron-down"></i>
+                <div class="dropdown-menu">
+                    <a href="#"><i class="fas fa-user"></i> Profile</a>
+                    <a href="#"><i class="fas fa-cog"></i> Settings</a>
+                    <a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <ul class="sidebar-menu">
+            <li class="sidebar-item">
+                <a href="dashboard.html" class="sidebar-link">
+                    <i class="fas fa-home"></i>
+                    <span>Overview</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="scanner.html" class="sidebar-link">
+                    <i class="fas fa-search"></i>
+                    <span>Security Scanner</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="vulnerabilities.html" class="sidebar-link">
+                    <i class="fas fa-bug"></i>
+                    <span>Vulnerabilities</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="reports.html" class="sidebar-link active">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Security Reports</h1>
+            <p>Generate, view, and export comprehensive security reports</p>
+        </div>
+
+        <!-- Report Filters -->
+        <div class="card">
+            <div class="report-filters">
+                <select class="form-control" style="width: 200px;">
+                    <option>All Report Types</option>
+                    <option>Daily Reports</option>
+                    <option>Weekly Reports</option>
+                    <option>Monthly Reports</option>
+                    <option>Scan Reports</option>
+                    <option>Compliance Reports</option>
+                </select>
+                
+                <select class="form-control" style="width: 200px;">
+                    <option>All Severities</option>
+                    <option>Critical Only</option>
+                    <option>High & Critical</option>
+                    <option>Medium & Above</option>
+                    <option>All Issues</option>
+                </select>
+                
+                <div class="date-range">
+                    <input type="date" class="form-control" value="2025-01-01">
+                    <span>to</span>
+                    <input type="date" class="form-control" value="2025-01-15">
+                </div>
+                
+                <button class="btn btn-primary">
+                    <i class="fas fa-filter"></i> Apply Filters
+                </button>
+                
+                <button class="btn btn-outline">
+                    <i class="fas fa-plus"></i> Generate New Report
+                </button>
+            </div>
+        </div>
+
+        <!-- Report Cards -->
+        <div class="report-cards">
+            <div class="report-card critical" onclick="showReport('daily')">
+                <div class="report-meta">
+                    <span>Daily Report</span>
+                    <span>Today, 10:30 AM</span>
+                </div>
+                <h3 class="report-title">Daily Security Summary</h3>
+                <p>Summary of all security events and vulnerabilities detected in the last 24 hours.</p>
+                <div class="report-stats">
+                    <span class="stat-pill" style="background: rgba(255, 62, 65, 0.2); color: #ff3e41;">3 Critical</span>
+                    <span class="stat-pill" style="background: rgba(255, 152, 0, 0.2); color: #ff9800;">5 High</span>
+                    <span class="stat-pill" style="background: rgba(255, 193, 7, 0.2); color: #ffc107;">12 Medium</span>
+                </div>
+                <div class="report-actions">
+                    <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); exportReport('pdf')">PDF</button>
+                    <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); exportReport('html')">HTML</button>
+                    <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); shareReport()">Share</button>
+                </div>
+            </div>
+            
+            <div class="report-card high" onclick="showReport('weekly')">
+                <div class="report-meta">
+                    <span>Weekly Report</span>
+                    <span>Jan 8-14, 2025</span>
+                </div>
+                <h3 class="report-title">Weekly Security Analysis</h3>
+                <p>Comprehensive analysis of security trends and vulnerability patterns over the past week.</p>
+                <div class="report-stats">
+                    <span class="stat-pill" style="background: rgba(255, 62, 65, 0.2); color: #ff3e41;">8 Critical</span>
+                    <span class="stat-pill" style="background: rgba(255, 152, 0, 0.2); color: #ff9800;">15 High</span>
+                    <span class="stat-pill" style="background: rgba(255, 193, 7, 0.2); color: #ffc107;">42 Medium</span>
+                </div>
+                <div class="report-actions">
+                    <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); exportReport('pdf')">PDF</button>
+                    <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); exportReport('html')">HTML</button>
+                    <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); shareReport()">Share</button>
+                </div>
+            </div>
+            
+            <div class="report-card medium" onclick="showReport('monthly')">
+                <div class="report-meta">
+                    <span>Monthly Report</span>
+                    <span>December 2024</span>
+                </div>
+                <h3 class="report-title">Monthly Security Compliance</h3>
+                <p>Monthly compliance report covering PCI DSS, HIPAA, and GDPR requirements.</p>
+                <div class="report-stats">
+                    <span class="stat-pill" style="background: rgba(255, 62, 65, 0.2); color: #ff3e41;">24 Critical</span>
+                    <span class="stat-pill" style="background: rgba(255, 152, 0, 0.2); color: #ff9800;">58 High</span>
+                    <span class="stat-pill" style="background: rgba(255, 193, 7, 0.2); color: #ffc107;">127 Medium</span>
+                </div>
+                <div class="report-actions">
+                    <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); exportReport('pdf')">PDF</button>
+                    <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); exportReport('html')">HTML</button>
+                    <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); shareReport()">Share</button>
+                </div>
+            </div>
+            
+            <div class="report-card low" onclick="showReport('scan')">
+                <div class="report-meta">
+                    <span>Scan Report</span>
+                    <span>Today, 09:15 AM</span>
+                </div>
+                <h3 class="report-title">Full Security Scan: example.com</h3>
+                <p>Detailed report from the comprehensive security scan of example.com.</p>
+                <div class="report-stats">
+                    <span class="stat-pill" style="background: rgba(255, 62, 65, 0.2); color: #ff3e41;">1 Critical</span>
+                    <span class="stat-pill" style="background: rgba(255, 152, 0, 0.2); color: #ff9800;">3 High</span>
+                    <span class="stat-pill" style="background: rgba(255, 193, 7, 0.2); color: #ffc107;">8 Medium</span>
+                </div>
+                <div class="report-actions">
+                    <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); exportReport('pdf')">PDF</button>
+                    <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); exportReport('html')">HTML</button>
+                    <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); shareReport()">Share</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Preview -->
+        <div class="card" id="reportPreview" style="display: none;">
+            <div class="card-header">
+                <h2 class="card-title" id="previewTitle">Report Preview</h2>
+                <div class="export-options">
+                    <div class="export-btn" onclick="exportReport('pdf')" title="Export as PDF">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div class="export-btn" onclick="exportReport('html')" title="Export as HTML">
+                        <i class="fas fa-file-code"></i>
+                    </div>
+                    <div class="export-btn" onclick="exportReport('csv')" title="Export as CSV">
+                        <i class="fas fa-file-csv"></i>
+                    </div>
+                    <div class="export-btn" onclick="printReport()" title="Print Report">
+                        <i class="fas fa-print"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="report-preview">
+                <div class="preview-header">
+                    <h1 id="reportHeader">Daily Security Report</h1>
+                    <p id="reportSubtitle">January 15, 2025 | Generated by Rakshak Security System</p>
+                </div>
+                
+                <div class="executive-summary">
+                    <h3>Executive Summary</h3>
+                    <p id="execSummary">This report provides an overview of the security status of your web applications. During the reporting period, several critical vulnerabilities were detected requiring immediate attention.</p>
+                    
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <div class="summary-number" id="totalVulns">27</div>
+                            <div>Total Vulnerabilities</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-number" id="criticalVulns">3</div>
+                            <div>Critical Issues</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-number" id="securityScore">78%</div>
+                            <div>Security Score</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-number" id="scansCompleted">42</div>
+                            <div>Scans Completed</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="vuln-chart">
+                    <canvas id="reportChart"></canvas>
+                </div>
+                
+                <div class="detail-section">
+                    <h3>Top Critical Vulnerabilities</h3>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Vulnerability</th>
+                                    <th>Severity</th>
+                                    <th>Location</th>
+                                    <th>Risk Score</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topVulnsTable">
+                                <!-- Filled by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h3>Recommendations</h3>
+                    <ul id="recommendations">
+                        <!-- Filled by JavaScript -->
+                    </ul>
+                </div>
+                
+                <div class="detail-section">
+                    <h3>Compliance Status</h3>
+                    <div class="compliance-grid">
+                        <div class="compliance-item">
+                            <strong>PCI DSS:</strong> <span class="badge badge-low">Compliant</span>
+                        </div>
+                        <div class="compliance-item">
+                            <strong>GDPR:</strong> <span class="badge badge-low">Compliant</span>
+                        </div>
+                        <div class="compliance-item">
+                            <strong>HIPAA:</strong> <span class="badge badge-medium">Needs Review</span>
+                        </div>
+                        <div class="compliance-item">
+                            <strong>ISO 27001:</strong> <span class="badge badge-low">Compliant</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scanner Animation -->
+    <div class="scanner-line"></div>
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/main.js"></script>
+    
+    <script>
+        function showReport(type) {
+            const preview = document.getElementById('reportPreview');
+            preview.style.display = 'block';
+            
+            // Update report content based on type
+            const reports = {
+                daily: {
+                    title: 'Daily Security Report',
+                    subtitle: 'January 15, 2025 | Generated by Rakshak Security System',
+                    totalVulns: 27,
+                    criticalVulns: 3,
+                    securityScore: 78,
+                    scansCompleted: 42,
+                    summary: 'This daily report summarizes security events from the last 24 hours. Three critical vulnerabilities require immediate attention.'
+                },
+                weekly: {
+                    title: 'Weekly Security Analysis',
+                    subtitle: 'January 8-14, 2025 | Generated by Rakshak Security System',
+                    totalVulns: 65,
+                    criticalVulns: 8,
+                    securityScore: 72,
+                    scansCompleted: 156,
+                    summary: 'Weekly analysis showing security trends and patterns. Eight critical vulnerabilities detected across multiple systems.'
+                },
+                monthly: {
+                    title: 'Monthly Security Compliance Report',
+                    subtitle: 'December 2024 | Generated by Rakshak Security System',
+                    totalVulns: 209,
+                    criticalVulns: 24,
+                    securityScore: 68,
+                    scansCompleted: 540,
+                    summary: 'Monthly compliance report covering all security aspects. Significant improvement needed in vulnerability management.'
+                },
+                scan: {
+                    title: 'Full Security Scan Report: example.com',
+                    subtitle: 'Scan completed on January 15, 2025, 09:15 AM',
+                    totalVulns: 12,
+                    criticalVulns: 1,
+                    securityScore: 85,
+                    scansCompleted: 1,
+                    summary: 'Comprehensive security scan of example.com completed. One critical SQL injection vulnerability requires immediate remediation.'
+                }
+            };
+            
+            const report = reports[type] || reports.daily;
+            
+            document.getElementById('reportHeader').textContent = report.title;
+            document.getElementById('reportSubtitle').textContent = report.subtitle;
+            document.getElementById('execSummary').textContent = report.summary;
+            document.getElementById('totalVulns').textContent = report.totalVulns;
+            document.getElementById('criticalVulns').textContent = report.criticalVulns;
+            document.getElementById('securityScore').textContent = report.securityScore + '%';
+            document.getElementById('scansCompleted').textContent = report.scansCompleted;
+            
+            // Update top vulnerabilities table
+            const topVulns = [
+                ['SQL Injection', 'Critical', '/api/login.php', '9.8/10', 'Open'],
+                ['Cross-Site Scripting', 'High', '/search.php', '7.5/10', 'Open'],
+                ['Remote Code Execution', 'Critical', '/upload.php', '9.5/10', 'Open'],
+                ['Broken Authentication', 'High', '/admin/login', '8.2/10', 'In Progress']
+            ];
+            
+            const tableBody = document.getElementById('topVulnsTable');
+            tableBody.innerHTML = '';
+            topVulns.forEach(vuln => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${vuln[0]}</td>
+                    <td><span class="badge ${vuln[1].toLowerCase() === 'critical' ? 'badge-critical' : 'badge-high'}">${vuln[1]}</span></td>
+                    <td>${vuln[2]}</td>
+                    <td>${vuln[3]}</td>
+                    <td><span class="badge badge-danger">${vuln[4]}</span></td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            // Update recommendations
+            const recommendations = [
+                'Immediate remediation of SQL injection vulnerability in login endpoint',
+                'Implement Content Security Policy headers',
+                'Regular security training for development team',
+                'Implement automated security testing in CI/CD pipeline',
+                'Update all third-party libraries to latest versions'
+            ];
+            
+            const recList = document.getElementById('recommendations');
+            recList.innerHTML = '';
+            recommendations.forEach(rec => {
+                const li = document.createElement('li');
+                li.textContent = rec;
+                recList.appendChild(li);
+            });
+            
+            // Update chart
+            if (window.reportChart) {
+                window.reportChart.destroy();
+            }
+            
+            const ctx = document.getElementById('reportChart').getContext('2d');
+            window.reportChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['SQLi', 'XSS', 'RCE', 'CSRF', 'Auth', 'Info', 'Other'],
+                    datasets: [{
+                        label: 'Vulnerability Count',
+                        data: [8, 12, 3, 7, 9, 15, 11],
+                        backgroundColor: [
+                            '#ff3e41',
+                            '#ff9800',
+                            '#ff3e41',
+                            '#ffc107',
+                            '#ff9800',
+                            '#4caf50',
+                            '#6c757d'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            // Scroll to preview
+            preview.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function exportReport(format) {
+            alert(`Report exported as ${format.toUpperCase()} successfully!`);
+        }
+        
+        function shareReport() {
+            alert('Share functionality would open sharing dialog');
+        }
+        
+        function printReport() {
+            window.print();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>֎🇦🇮 Rakshak - Dashboard</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/dashboard.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <img src="https://via.placeholder.com/40x40" alt="Rakshak Logo">
+            <span class="logo-text">RAKSHAK</span>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="dashboard.html" class="active">Dashboard</a></li>
+            <li><a href="scanner.html">Scanner</a></li>
+            <li><a href="reports.html">Reports</a></li>
+            <li><a href="vulnerabilities.html">Vulnerabilities</a></li>
+        </ul>
+        <div class="user-menu">
+            <div class="user-avatar">
+                <img src="https://via.placeholder.com/40x40" alt="User Avatar">
+            </div>
+            <div class="user-info">
+                <span class="user-name">Kundan Kumar</span>
+                <span class="user-role">Security Analyst</span>
+            </div>
+            <div class="dropdown">
+                <i class="fas fa-chevron-down"></i>
+                <div class="dropdown-menu">
+                    <a href="#"><i class="fas fa-user"></i> Profile</a>
+                    <a href="#"><i class="fas fa-cog"></i> Settings</a>
+                    <a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <ul class="sidebar-menu">
+            <li class="sidebar-item">
+                <a href="dashboard.html" class="sidebar-link active">
+                    <i class="fas fa-home"></i>
+                    <span>Overview</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="scanner.html" class="sidebar-link">
+                    <i class="fas fa-search"></i>
+                    <span>Security Scanner</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="vulnerabilities.html" class="sidebar-link">
+                    <i class="fas fa-bug"></i>
+                    <span>Vulnerabilities</span>
+                    <span class="badge badge-critical">3</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="reports.html" class="sidebar-link">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Protection</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-bell"></i>
+                    <span>Alerts</span>
+                    <span class="badge badge-high">5</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Help & Support</span>
+                </a>
+            </li>
+        </ul>
+        
+        <div class="sidebar-footer">
+            <div class="security-status">
+                <div class="status-indicator"></div>
+                <span>System Status: <strong>Protected</strong></span>
+            </div>
+            <button class="btn btn-primary btn-block">
+                <i class="fas fa-sync-alt"></i> Run Quick Scan
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Security Dashboard</h1>
+            <p>Monitor your web application security in real-time</p>
+            <div class="last-scan">
+                Last scan: <strong>5 minutes ago</strong> | Next scan: <strong>in 55 minutes</strong>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-4">
+            <div class="card">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>98%</h3>
+                        <p>Security Score</p>
+                        <div class="progress">
+                            <div class="progress-bar" style="width: 98%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="stat-card">
+                    <div class="stat-icon critical">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>3</h3>
+                        <p>Critical Issues</p>
+                        <span class="badge badge-critical">Needs Immediate Attention</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-bug"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>27</h3>
+                        <p>Total Vulnerabilities</p>
+                        <span class="trend up">+2 since yesterday</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>24/7</h3>
+                        <p>Active Monitoring</p>
+                        <span class="status active">All Systems Operational</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-2">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Vulnerability Trends</h2>
+                    <select class="form-control period-select">
+                        <option>Last 7 days</option>
+                        <option>Last 30 days</option>
+                        <option>Last 90 days</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="vulnerabilityChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Threat Distribution</h2>
+                    <button class="btn btn-outline">View Details</button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="threatChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Scans -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Recent Security Scans</h2>
+                <a href="scanner.html" class="btn btn-primary">New Scan</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Target URL</th>
+                            <th>Started</th>
+                            <th>Duration</th>
+                            <th>Issues Found</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>https://example.com</td>
+                            <td>10:30 AM</td>
+                            <td>2m 15s</td>
+                            <td><span class="badge badge-critical">3</span> <span class="badge badge-high">5</span></td>
+                            <td><span class="badge badge-info">Completed</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline">View Report</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>https://api.example.com</td>
+                            <td>09:15 AM</td>
+                            <td>4m 30s</td>
+                            <td><span class="badge badge-high">2</span> <span class="badge badge-medium">8</span></td>
+                            <td><span class="badge badge-info">Completed</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline">View Report</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>https://admin.example.com</td>
+                            <td>Yesterday</td>
+                            <td>8m 10s</td>
+                            <td><span class="badge badge-critical">1</span> <span class="badge badge-medium">12</span></td>
+                            <td><span class="badge badge-info">Completed</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline">View Report</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Critical Issues -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Critical Issues Requiring Attention</h2>
+                <button class="btn btn-danger">Fix All Critical</button>
+            </div>
+            <div class="issues-list">
+                <div class="issue-item critical">
+                    <div class="issue-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="issue-content">
+                        <h4>SQL Injection Vulnerability</h4>
+                        <p>User input not properly sanitized in login endpoint</p>
+                        <div class="issue-meta">
+                            <span><i class="fas fa-code"></i> /api/login.php</span>
+                            <span><i class="fas fa-calendar"></i> Detected 2 hours ago</span>
+                            <span><i class="fas fa-user"></i> High Risk</span>
+                        </div>
+                    </div>
+                    <div class="issue-actions">
+                        <button class="btn btn-sm btn-danger">Fix Now</button>
+                        <button class="btn btn-sm btn-outline">Ignore</button>
+                    </div>
+                </div>
+                
+                <div class="issue-item critical">
+                    <div class="issue-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="issue-content">
+                        <h4>Cross-Site Scripting (XSS)</h4>
+                        <p>Reflected XSS in search parameter</p>
+                        <div class="issue-meta">
+                            <span><i class="fas fa-code"></i> /search.php?q=</span>
+                            <span><i class="fas fa-calendar"></i> Detected 5 hours ago</span>
+                            <span><i class="fas fa-user"></i> High Risk</span>
+                        </div>
+                    </div>
+                    <div class="issue-actions">
+                        <button class="btn btn-sm btn-danger">Fix Now</button>
+                        <button class="btn btn-sm btn-outline">Ignore</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scanner Animation -->
+    <div class="scanner-line"></div>
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/dashboard.js"></script>
+    
+    <script>
+        // Initialize charts
+        const vulnerabilityCtx = document.getElementById('vulnerabilityChart').getContext('2d');
+        const vulnerabilityChart = new Chart(vulnerabilityCtx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Critical',
+                    data: [2, 3, 1, 4, 3, 2, 3],
+                    borderColor: '#ff3e41',
+                    backgroundColor: 'rgba(255, 62, 65, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'High',
+                    data: [5, 7, 6, 8, 7, 6, 5],
+                    borderColor: '#ff9800',
+                    backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'Medium',
+                    data: [12, 10, 14, 15, 13, 11, 12],
+                    borderColor: '#ffc107',
+                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                }
+            }
+        });
+
+        const threatCtx = document.getElementById('threatChart').getContext('2d');
+        const threatChart = new Chart(threatCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['SQL Injection', 'XSS', 'CSRF', 'File Inclusion', 'Broken Auth', 'Others'],
+                datasets: [{
+                    data: [25, 20, 15, 12, 18, 10],
+                    backgroundColor: [
+                        '#ff3e41',
+                        '#ff9800',
+                        '#ffc107',
+                        '#00d1b2',
+                        '#2a75ff',
+                        '#6c757d'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

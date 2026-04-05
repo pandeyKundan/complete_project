@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>֎🇦🇮 Rakshak - Security Scanner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/main.css">
+    <style>
+        /* Scanner specific styles */
+        .scanner-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .scan-progress {
+            margin: 2rem 0;
+        }
+        
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .scan-results {
+            margin-top: 2rem;
+        }
+        
+        .result-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .result-item.critical {
+            background: rgba(255, 62, 65, 0.1);
+        }
+        
+        .result-item.high {
+            background: rgba(255, 152, 0, 0.1);
+        }
+        
+        .result-item.medium {
+            background: rgba(255, 193, 7, 0.1);
+        }
+        
+        .result-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+        }
+        
+        .result-icon.critical {
+            background: rgba(255, 62, 65, 0.2);
+            color: #ff3e41;
+        }
+        
+        .result-icon.high {
+            background: rgba(255, 152, 0, 0.2);
+            color: #ff9800;
+        }
+        
+        .result-icon.medium {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+        
+        .scan-type-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .scan-type-card {
+            padding: 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .scan-type-card:hover,
+        .scan-type-card.active {
+            border-color: var(--primary);
+            background: rgba(42, 117, 255, 0.1);
+        }
+        
+        .scan-type-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+        
+        .live-scan-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #00d1b2;
+            margin-right: 0.5rem;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .scan-parameters {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <img src="https://via.placeholder.com/40x40" alt="Rakshak Logo">
+            <span class="logo-text">RAKSHAK</span>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="scanner.html" class="active">Scanner</a></li>
+            <li><a href="reports.html">Reports</a></li>
+            <li><a href="vulnerabilities.html">Vulnerabilities</a></li>
+        </ul>
+        <div class="user-menu">
+            <div class="user-avatar">
+                <img src="https://via.placeholder.com/40x40" alt="User Avatar">
+            </div>
+            <div class="user-info">
+                <span class="user-name">Kundan Kumar</span>
+                <span class="user-role">Security Analyst</span>
+            </div>
+            <div class="dropdown">
+                <i class="fas fa-chevron-down"></i>
+                <div class="dropdown-menu">
+                    <a href="#"><i class="fas fa-user"></i> Profile</a>
+                    <a href="#"><i class="fas fa-cog"></i> Settings</a>
+                    <a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <ul class="sidebar-menu">
+            <li class="sidebar-item">
+                <a href="dashboard.html" class="sidebar-link">
+                    <i class="fas fa-home"></i>
+                    <span>Overview</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="scanner.html" class="sidebar-link active">
+                    <i class="fas fa-search"></i>
+                    <span>Security Scanner</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="vulnerabilities.html" class="sidebar-link">
+                    <i class="fas fa-bug"></i>
+                    <span>Vulnerabilities</span>
+                    <span class="badge badge-critical">3</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="reports.html" class="sidebar-link">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Security Scanner</h1>
+            <p>Scan your web applications for vulnerabilities and security issues</p>
+        </div>
+
+        <div class="scanner-container">
+            <!-- Target Input -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Scan Target</h2>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Website URL or IP Address</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="https://example.com" id="targetUrl">
+                        <button class="btn btn-primary" onclick="startScan()">
+                            <i class="fas fa-search"></i> Start Scan
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="scan-type-selector">
+                    <div class="scan-type-card active" onclick="selectScanType('quick')">
+                        <div class="scan-type-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <h4>Quick Scan</h4>
+                        <p>Fast scan for common vulnerabilities (2-3 minutes)</p>
+                    </div>
+                    
+                    <div class="scan-type-card" onclick="selectScanType('full')">
+                        <div class="scan-type-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h4>Full Scan</h4>
+                        <p>Comprehensive scan with all tests (10-15 minutes)</p>
+                    </div>
+                    
+                    <div class="scan-type-card" onclick="selectScanType('custom')">
+                        <div class="scan-type-icon">
+                            <i class="fas fa-sliders-h"></i>
+                        </div>
+                        <h4>Custom Scan</h4>
+                        <p>Configure specific tests and parameters</p>
+                    </div>
+                </div>
+                
+                <div class="scan-parameters">
+                    <h4>Advanced Settings</h4>
+                    <div class="form-group">
+                        <label class="checkbox">
+                            <input type="checkbox" checked> Include SQL Injection tests
+                        </label>
+                        <label class="checkbox">
+                            <input type="checkbox" checked> Include XSS tests
+                        </label>
+                        <label class="checkbox">
+                            <input type="checkbox"> Include CSRF tests
+                        </label>
+                        <label class="checkbox">
+                            <input type="checkbox" checked> Include Directory Traversal tests
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Authentication (Optional)</label>
+                        <input type="text" class="form-control" placeholder="Username">
+                        <input type="password" class="form-control mt-2" placeholder="Password">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scan Progress -->
+            <div class="card" id="scanProgress" style="display: none;">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span class="live-scan-indicator"></span>
+                        Scanning in Progress
+                    </h2>
+                    <span id="scanTimer">00:00</span>
+                </div>
+                
+                <div class="scan-progress">
+                    <div class="progress">
+                        <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-stats">
+                        <span id="progressText">Initializing...</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                </div>
+                
+                <div class="current-test">
+                    <h4>Current Test: <span id="currentTest">Initializing scanner...</span></h4>
+                    <p id="testDescription">Loading test modules...</p>
+                </div>
+                
+                <div class="found-issues">
+                    <h4>Issues Found: <span id="foundIssues">0</span></h4>
+                    <div class="issues-count">
+                        <span class="badge badge-critical" id="criticalCount">0 Critical</span>
+                        <span class="badge badge-high" id="highCount">0 High</span>
+                        <span class="badge badge-medium" id="mediumCount">0 Medium</span>
+                    </div>
+                </div>
+                
+                <button class="btn btn-danger btn-block" onclick="stopScan()">
+                    <i class="fas fa-stop"></i> Stop Scan
+                </button>
+            </div>
+
+            <!-- Scan Results -->
+            <div class="card" id="scanResults" style="display: none;">
+                <div class="card-header">
+                    <h2 class="card-title">Scan Results</h2>
+                    <button class="btn btn-primary" onclick="exportReport()">
+                        <i class="fas fa-download"></i> Export Report
+                    </button>
+                </div>
+                
+                <div class="scan-summary">
+                    <div class="summary-stats grid grid-cols-3">
+                        <div class="stat-box">
+                            <h3 id="totalIssues">0</h3>
+                            <p>Total Issues</p>
+                        </div>
+                        <div class="stat-box">
+                            <h3 id="scanDuration">0s</h3>
+                            <p>Scan Duration</p>
+                        </div>
+                        <div class="stat-box">
+                            <h3 id="securityScore">100%</h3>
+                            <p>Security Score</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="scan-results">
+                    <h4>Vulnerabilities Found:</h4>
+                    <div id="resultsList"></div>
+                </div>
+                
+                <div class="recommendations">
+                    <h4>Recommendations:</h4>
+                    <ul id="recommendationsList"></ul>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scanner Animation -->
+    <div class="scanner-line"></div>
+
+    <!-- JavaScript -->
+    <script src="js/main.js"></script>
+    <script src="js/scanner.js"></script>
+    
+    <script>
+        let currentScanType = 'quick';
+        let scanInterval;
+        let scanTime = 0;
+        let scanProgress = 0;
+        let isScanning = false;
+        
+        function selectScanType(type) {
+            currentScanType = type;
+            document.querySelectorAll('.scan-type-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+        }
+        
+        function startScan() {
+            const url = document.getElementById('targetUrl').value;
+            if (!url) {
+                alert('Please enter a target URL');
+                return;
+            }
+            
+            isScanning = true;
+            scanTime = 0;
+            scanProgress = 0;
+            
+            // Show progress card
+            document.getElementById('scanProgress').style.display = 'block';
+            document.getElementById('scanResults').style.display = 'none';
+            
+            // Reset counters
+            document.getElementById('criticalCount').textContent = '0 Critical';
+            document.getElementById('highCount').textContent = '0 High';
+            document.getElementById('mediumCount').textContent = '0 Medium';
+            document.getElementById('foundIssues').textContent = '0';
+            
+            // Start timer
+            updateTimer();
+            scanInterval = setInterval(updateTimer, 1000);
+            
+            // Simulate scan progress
+            simulateScan();
+        }
+        
+        function stopScan() {
+            isScanning = false;
+            clearInterval(scanInterval);
+            document.getElementById('scanProgress').style.display = 'none';
+            showResults();
+        }
+        
+        function updateTimer() {
+            scanTime++;
+            const minutes = Math.floor(scanTime / 60);
+            const seconds = scanTime % 60;
+            document.getElementById('scanTimer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        function simulateScan() {
+            if (!isScanning) return;
+            
+            const tests = [
+                'Network Discovery',
+                'Port Scanning',
+                'Service Detection',
+                'SQL Injection Testing',
+                'XSS Testing',
+                'CSRF Testing',
+                'Directory Traversal',
+                'File Inclusion',
+                'SSL/TLS Analysis',
+                'Header Security'
+            ];
+            
+            let testIndex = Math.floor(scanProgress / 10);
+            if (testIndex < tests.length) {
+                document.getElementById('currentTest').textContent = tests[testIndex];
+                document.getElementById('testDescription').textContent = 
+                    `Testing for ${tests[testIndex].toLowerCase()} vulnerabilities`;
+            }
+            
+            scanProgress += Math.random() * 3;
+            if (scanProgress > 100) scanProgress = 100;
+            
+            document.getElementById('progressBar').style.width = scanProgress + '%';
+            document.getElementById('progressPercent').textContent = Math.floor(scanProgress) + '%';
+            
+            // Simulate finding issues
+            if (Math.random() < 0.2 && scanProgress < 80) {
+                const issueTypes = ['critical', 'high', 'medium'];
+                const type = issueTypes[Math.floor(Math.random() * issueTypes.length)];
+                
+                let current = parseInt(document.getElementById('foundIssues').textContent);
+                document.getElementById('foundIssues').textContent = current + 1;
+                
+                let countElement;
+                switch(type) {
+                    case 'critical':
+                        countElement = document.getElementById('criticalCount');
+                        break;
+                    case 'high':
+                        countElement = document.getElementById('highCount');
+                        break;
+                    case 'medium':
+                        countElement = document.getElementById('mediumCount');
+                        break;
+                }
+                
+                if (countElement) {
+                    const count = parseInt(countElement.textContent);
+                    countElement.textContent = `${count + 1} ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+                }
+            }
+            
+            document.getElementById('progressText').textContent = 
+                `Scanning... ${Math.floor(scanProgress)}% complete`;
+            
+            if (scanProgress < 100) {
+                setTimeout(simulateScan, 500);
+            } else {
+                stopScan();
+            }
+        }
+        
+        function showResults() {
+            document.getElementById('scanProgress').style.display = 'none';
+            document.getElementById('scanResults').style.display = 'block';
+            
+            const critical = parseInt(document.getElementById('criticalCount').textContent);
+            const high = parseInt(document.getElementById('highCount').textContent);
+            const medium = parseInt(document.getElementById('mediumCount').textContent);
+            const total = critical + high + medium;
+            
+            document.getElementById('totalIssues').textContent = total;
+            document.getElementById('scanDuration').textContent = 
+                `${Math.floor(scanTime / 60)}m ${scanTime % 60}s`;
+            
+            const score = Math.max(100 - (critical * 20 + high * 10 + medium * 5), 0);
+            document.getElementById('securityScore').textContent = score + '%';
+            
+            // Generate sample results
+            const resultsList = document.getElementById('resultsList');
+            resultsList.innerHTML = '';
+            
+            const sampleResults = [
+                { type: 'critical', title: 'SQL Injection', desc: 'User input not sanitized in login form' },
+                { type: 'high', title: 'Cross-Site Scripting', desc: 'Reflected XSS in search parameter' },
+                { type: 'medium', title: 'Missing Security Headers', desc: 'X-Frame-Options header not set' },
+                { type: 'low', title: 'Information Disclosure', desc: 'Server version disclosure in headers' }
+            ];
+            
+            sampleResults.forEach(result => {
+                const div = document.createElement('div');
+                div.className = `result-item ${result.type}`;
+                div.innerHTML = `
+                    <div class="result-icon ${result.type}">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="result-content">
+                        <h5>${result.title}</h5>
+                        <p>${result.desc}</p>
+                    </div>
+                `;
+                resultsList.appendChild(div);
+            });
+            
+            // Generate recommendations
+            const recList = document.getElementById('recommendationsList');
+            recList.innerHTML = '';
+            const recommendations = [
+                'Implement input validation and parameterized queries',
+                'Use Content Security Policy headers',
+                'Update to latest software versions',
+                'Implement rate limiting on authentication endpoints'
+            ];
+            
+            recommendations.forEach(rec => {
+                const li = document.createElement('li');
+                li.textContent = rec;
+                recList.appendChild(li);
+            });
+        }
+        
+        function exportReport() {
+            alert('Report exported successfully!');
+        }
+    </script>
+</body>
+</html>
