@@ -3,379 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>֎🇦🇮 Rakshak - Dashboard</title>
-    
+    <title>Rakshak - Advanced Web Security System Analyzer</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/main.css">
-    <link rel="stylesheet" href="styles/dashboard.css">
+    <style>
+        :root {
+            --primary: #2a75ff;
+            --primary-dark: #1a5bd9;
+            --secondary: #ff3e41;
+            --dark: #0a192f;
+            --light: #f8f9fa;
+            --accent: #00d1b2;
+        }
+
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 0 5%;
+            position: relative;
+            margin-top: 70px;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80') no-repeat center center/cover;
+            opacity: 0.1;
+            z-index: -1;
+        }
+        
+        .hero-content {
+            max-width: 600px;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        .hero h1 span {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .hero p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .hero-stats {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        .features {
+            padding: 5rem 5%;
+            background: rgba(10,25,47,0.7);
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .feature-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 2rem;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+        
+        .cta {
+            padding: 5rem 5%;
+            text-align: center;
+        }
+        
+        .cta h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2rem; }
+            .hero-buttons { flex-direction: column; }
+            .hero-stats { flex-direction: column; gap: 1rem; }
+        }
+    </style>
 </head>
 <body>
-    <!-- Header -->
     <header class="header">
         <div class="logo">
-            <img src="https://via.placeholder.com/40x40" alt="Rakshak Logo">
             <span class="logo-text">RAKSHAK</span>
         </div>
-        <ul class="nav-menu">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="dashboard.html" class="active">Dashboard</a></li>
-            <li><a href="scanner.html">Scanner</a></li>
-            <li><a href="reports.html">Reports</a></li>
-            <li><a href="vulnerabilities.html">Vulnerabilities</a></li>
-        </ul>
-        <div class="user-menu">
-            <div class="user-avatar">
-                <img src="https://via.placeholder.com/40x40" alt="User Avatar">
-            </div>
-            <div class="user-info">
-                <span class="user-name">Kundan Kumar</span>
-                <span class="user-role">Security Analyst</span>
-            </div>
-            <div class="dropdown">
-                <i class="fas fa-chevron-down"></i>
-                <div class="dropdown-menu">
-                    <a href="#"><i class="fas fa-user"></i> Profile</a>
-                    <a href="#"><i class="fas fa-cog"></i> Settings</a>
-                    <a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                </div>
-            </div>
+        <nav>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="scanner.html">Scanner</a></li>
+                <li><a href="reports.html">Reports</a></li>
+                <li><a href="vulnerabilities.html">Vulnerabilities</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons">
+            <a href="login.html" class="btn btn-outline">Login</a>
+            <a href="register.html" class="btn btn-primary">Get Started</a>
         </div>
     </header>
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <ul class="sidebar-menu">
-            <li class="sidebar-item">
-                <a href="dashboard.html" class="sidebar-link active">
-                    <i class="fas fa-home"></i>
-                    <span>Overview</span>
-                </a>
-            </li>
-            <li class="sidebar-item">
-                <a href="scanner.html" class="sidebar-link">
-                    <i class="fas fa-search"></i>
-                    <span>Security Scanner</span>
-                </a>
-            </li>
-            <li class="sidebar-item">
-                <a href="vulnerabilities.html" class="sidebar-link">
-                    <i class="fas fa-bug"></i>
-                    <span>Vulnerabilities</span>
-                    <span class="badge badge-critical">3</span>
-                </a>
-            </li>
-            <li class="sidebar-item">
-                <a href="reports.html" class="sidebar-link">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Reports</span>
-                </a>
-            </li>
-            <li class="sidebar-item">
-                <a href="#" class="sidebar-link">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>Protection</span>
-                </a>
-            </li>
-            <li class="sidebar-item">
-                <a href="#" class="sidebar-link">
-                    <i class="fas fa-bell"></i>
-                    <span>Alerts</span>
-                    <span class="badge badge-high">5</span>
-                </a>
-            </li>
-            <li class="sidebar-item">
-                <a href="#" class="sidebar-link">
-                    <i class="fas fa-cog"></i>
-                    <span>Settings</span>
-                </a>
-            </li>
-            <li class="sidebar-item">
-                <a href="#" class="sidebar-link">
-                    <i class="fas fa-question-circle"></i>
-                    <span>Help & Support</span>
-                </a>
-            </li>
-        </ul>
-        
-        <div class="sidebar-footer">
-            <div class="security-status">
-                <div class="status-indicator"></div>
-                <span>System Status: <strong>Protected</strong></span>
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Advanced <span>Security Analysis</span> for Modern Web Applications</h1>
+            <p>Rakshak provides comprehensive security scanning, vulnerability detection, and threat protection for your web applications.</p>
+            <div class="hero-buttons">
+                <a href="scanner.html" class="btn btn-primary">Scan Your Website</a>
+                <a href="dashboard.html" class="btn btn-outline">View Dashboard</a>
             </div>
-            <button class="btn btn-primary btn-block">
-                <i class="fas fa-sync-alt"></i> Run Quick Scan
-            </button>
-        </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="page-header">
-            <h1>Security Dashboard</h1>
-            <p>Monitor your web application security in real-time</p>
-            <div class="last-scan">
-                Last scan: <strong>5 minutes ago</strong> | Next scan: <strong>in 55 minutes</strong>
+            <div class="hero-stats">
+                <div><div class="stat-number">10K+</div><div>Websites Protected</div></div>
+                <div><div class="stat-number">99.9%</div><div>Threat Detection</div></div>
+                <div><div class="stat-number">24/7</div><div>Monitoring</div></div>
             </div>
         </div>
+    </section>
 
-        <!-- Stats Grid -->
-        <div class="grid grid-cols-4">
-            <div class="card">
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>98%</h3>
-                        <p>Security Score</p>
-                        <div class="progress">
-                            <div class="progress-bar" style="width: 98%"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="stat-card">
-                    <div class="stat-icon critical">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>3</h3>
-                        <p>Critical Issues</p>
-                        <span class="badge badge-critical">Needs Immediate Attention</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-bug"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>27</h3>
-                        <p>Total Vulnerabilities</p>
-                        <span class="trend up">+2 since yesterday</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>24/7</h3>
-                        <p>Active Monitoring</p>
-                        <span class="status active">All Systems Operational</span>
-                    </div>
-                </div>
-            </div>
+    <section class="features">
+        <div style="text-align:center">
+            <h2>Powerful Security Features</h2>
+            <p>Complete protection for your web applications</p>
         </div>
-
-        <!-- Charts Section -->
-        <div class="grid grid-cols-2">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Vulnerability Trends</h2>
-                    <select class="form-control period-select">
-                        <option>Last 7 days</option>
-                        <option>Last 30 days</option>
-                        <option>Last 90 days</option>
-                    </select>
-                </div>
-                <div class="chart-container">
-                    <canvas id="vulnerabilityChart"></canvas>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Threat Distribution</h2>
-                    <button class="btn btn-outline">View Details</button>
-                </div>
-                <div class="chart-container">
-                    <canvas id="threatChart"></canvas>
-                </div>
-            </div>
+        <div class="features-grid">
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-shield-alt"></i></div><h3>Vulnerability Scanning</h3><p>Automatically detect security vulnerabilities</p></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-bug"></i></div><h3>Malware Detection</h3><p>Identify and remove malicious code</p></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-chart-line"></i></div><h3>Real-time Analytics</h3><p>Get detailed security reports</p></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-bell"></i></div><h3>Instant Alerts</h3><p>Receive immediate notifications</p></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-code"></i></div><h3>Code Analysis</h3><p>Deep scan for security flaws</p></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-robot"></i></div><h3>AI-Powered</h3><p>Machine learning threat detection</p></div>
         </div>
+    </section>
 
-        <!-- Recent Scans -->
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">Recent Security Scans</h2>
-                <a href="scanner.html" class="btn btn-primary">New Scan</a>
-            </div>
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Target URL</th>
-                            <th>Started</th>
-                            <th>Duration</th>
-                            <th>Issues Found</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>https://example.com</td>
-                            <td>10:30 AM</td>
-                            <td>2m 15s</td>
-                            <td><span class="badge badge-critical">3</span> <span class="badge badge-high">5</span></td>
-                            <td><span class="badge badge-info">Completed</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline">View Report</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>https://api.example.com</td>
-                            <td>09:15 AM</td>
-                            <td>4m 30s</td>
-                            <td><span class="badge badge-high">2</span> <span class="badge badge-medium">8</span></td>
-                            <td><span class="badge badge-info">Completed</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline">View Report</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>https://admin.example.com</td>
-                            <td>Yesterday</td>
-                            <td>8m 10s</td>
-                            <td><span class="badge badge-critical">1</span> <span class="badge badge-medium">12</span></td>
-                            <td><span class="badge badge-info">Completed</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline">View Report</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+    <section class="cta">
+        <h2>Ready to Secure Your Web Applications?</h2>
+        <p>Join thousands of businesses that trust Rakshak for their web security needs.</p>
+        <div class="cta-buttons">
+            <a href="register.html" class="btn btn-primary">Start Free Trial</a>
+            <a href="scanner.html" class="btn btn-outline">Try Quick Scan</a>
         </div>
+    </section>
 
-        <!-- Critical Issues -->
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">Critical Issues Requiring Attention</h2>
-                <button class="btn btn-danger">Fix All Critical</button>
-            </div>
-            <div class="issues-list">
-                <div class="issue-item critical">
-                    <div class="issue-icon">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div class="issue-content">
-                        <h4>SQL Injection Vulnerability</h4>
-                        <p>User input not properly sanitized in login endpoint</p>
-                        <div class="issue-meta">
-                            <span><i class="fas fa-code"></i> /api/login.php</span>
-                            <span><i class="fas fa-calendar"></i> Detected 2 hours ago</span>
-                            <span><i class="fas fa-user"></i> High Risk</span>
-                        </div>
-                    </div>
-                    <div class="issue-actions">
-                        <button class="btn btn-sm btn-danger">Fix Now</button>
-                        <button class="btn btn-sm btn-outline">Ignore</button>
-                    </div>
-                </div>
-                
-                <div class="issue-item critical">
-                    <div class="issue-icon">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div class="issue-content">
-                        <h4>Cross-Site Scripting (XSS)</h4>
-                        <p>Reflected XSS in search parameter</p>
-                        <div class="issue-meta">
-                            <span><i class="fas fa-code"></i> /search.php?q=</span>
-                            <span><i class="fas fa-calendar"></i> Detected 5 hours ago</span>
-                            <span><i class="fas fa-user"></i> High Risk</span>
-                        </div>
-                    </div>
-                    <div class="issue-actions">
-                        <button class="btn btn-sm btn-danger">Fix Now</button>
-                        <button class="btn btn-sm btn-outline">Ignore</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
+    <footer style="text-align:center; padding:2rem; border-top:1px solid rgba(255,255,255,0.1); margin-top:2rem;">
+        <p>&copy; 2025 Rakshak Security Systems. All rights reserved.</p>
+    </footer>
 
-    <!-- Scanner Animation -->
     <div class="scanner-line"></div>
-
-    <!-- JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="js/main.js"></script>
-    <script src="js/dashboard.js"></script>
-    
-    <script>
-        // Initialize charts
-        const vulnerabilityCtx = document.getElementById('vulnerabilityChart').getContext('2d');
-        const vulnerabilityChart = new Chart(vulnerabilityCtx, {
-            type: 'line',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                    label: 'Critical',
-                    data: [2, 3, 1, 4, 3, 2, 3],
-                    borderColor: '#ff3e41',
-                    backgroundColor: 'rgba(255, 62, 65, 0.1)',
-                    tension: 0.4
-                }, {
-                    label: 'High',
-                    data: [5, 7, 6, 8, 7, 6, 5],
-                    borderColor: '#ff9800',
-                    backgroundColor: 'rgba(255, 152, 0, 0.1)',
-                    tension: 0.4
-                }, {
-                    label: 'Medium',
-                    data: [12, 10, 14, 15, 13, 11, 12],
-                    borderColor: '#ffc107',
-                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    }
-                }
-            }
-        });
-
-        const threatCtx = document.getElementById('threatChart').getContext('2d');
-        const threatChart = new Chart(threatCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['SQL Injection', 'XSS', 'CSRF', 'File Inclusion', 'Broken Auth', 'Others'],
-                datasets: [{
-                    data: [25, 20, 15, 12, 18, 10],
-                    backgroundColor: [
-                        '#ff3e41',
-                        '#ff9800',
-                        '#ffc107',
-                        '#00d1b2',
-                        '#2a75ff',
-                        '#6c757d'
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                    }
-                }
-            }
-        });
-    </script>
 </body>
 </html>
