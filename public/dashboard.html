@@ -142,7 +142,7 @@
                     <div class="stat-info">
                         <h3 id="criticalIssues">--</h3>
                         <p>Critical Issues</p>
-                        <span class="badge badge-critical" id="criticalWarning">Needs Attention</span>
+                        <span class="badge badge-critical" id="criticalWarning">Needs Immediate Attention</span>
                     </div>
                 </div>
             </div>
@@ -247,12 +247,14 @@
     <script src="js/dashboard.js"></script>
     
     <script>
-        // Global chart variables
         let vulnerabilityChart, threatChart;
 
-        // Helper: fetch JSON with error handling
+        // Helper function for API calls
         async function fetchJSON(url, options = {}) {
-            const res = await fetch(url, options);
+            const res = await fetch(url, {
+                ...options,
+                credentials: 'include'  // Important for session cookies
+            });
             if (!res.ok) {
                 const err = await res.json().catch(() => ({ error: 'Request failed' }));
                 throw new Error(err.error || `HTTP ${res.status}`);
@@ -260,12 +262,11 @@
             return res.json();
         }
 
-        // Check authentication and load user name
+        // Check authentication
         async function checkAuth() {
             try {
                 const data = await fetchJSON('/api/auth/me');
-                const user = data.user;
-                document.getElementById('userName').innerText = user.first_name + ' ' + user.last_name;
+                document.getElementById('userName').innerText = data.user.first_name + ' ' + data.user.last_name;
                 return true;
             } catch (err) {
                 console.error('Auth error:', err);
@@ -274,30 +275,37 @@
             }
         }
 
-        // Update dashboard stats
+        // Load dashboard stats
         async function loadStats() {
             try {
                 const stats = await fetchJSON('/api/dashboard/stats');
-                // Security score
+                
+                // Update security score
                 const score = stats.securityScore || 0;
                 document.getElementById('securityScore').innerText = score + '%';
                 document.getElementById('scoreProgressBar').style.width = score + '%';
-                // Critical issues
-                document.getElementById('criticalIssues').innerText = stats.criticalIssues || 0;
-                document.getElementById('criticalBadge').innerText = stats.criticalIssues || 0;
-                if (stats.criticalIssues > 0) {
+                
+                // Update critical issues
+                const critical = stats.criticalIssues || 0;
+                document.getElementById('criticalIssues').innerText = critical;
+                document.getElementById('criticalBadge').innerText = critical;
+                
+                if (critical > 0) {
                     document.getElementById('criticalWarning').innerHTML = '<i class="fas fa-exclamation-circle"></i> Needs Immediate Attention';
                 } else {
                     document.getElementById('criticalWarning').innerHTML = '<i class="fas fa-check-circle"></i> No Critical Issues';
                 }
-                // Total vulnerabilities
+                
+                // Update total vulnerabilities
                 document.getElementById('totalVulns').innerText = stats.totalVulnerabilities || 0;
-                // Last scan info (if any recent scan)
+                
+                // Update last scan info
                 if (stats.recentScans && stats.recentScans.length > 0) {
                     const lastScan = stats.recentScans[0];
                     const lastScanTime = new Date(lastScan.startedAt).toLocaleString();
                     document.getElementById('lastScanInfo').innerHTML = `Last scan: <strong>${lastScanTime}</strong> | Next scan: <strong>Auto-scheduled</strong>`;
                 }
+                
                 return stats;
             } catch (err) {
                 console.error('Failed to load stats:', err);
@@ -305,35 +313,38 @@
             }
         }
 
-        // Load recent scans table
+        // Load recent scans
         async function loadRecentScans() {
             try {
-                const stats = await fetchJSON('/api/dashboard/stats');
-                const scans = stats.recentScans || [];
+                const scans = await fetchJSON('/api/scans');
                 const tbody = document.getElementById('recentScansTable');
-                if (scans.length === 0) {
+                
+                if (!scans.length) {
                     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">No scans yet. Start a new scan!</td></tr>';
                     return;
                 }
+                
                 tbody.innerHTML = '';
-                for (const scan of scans) {
-                    // Fetch vulnerability count for this scan (optional, could be from scan object)
-                    let issuesHtml = '--';
-                    if (scan.id) {
-                        try {
-                            const scanDetail = await fetchJSON(`/api/scans/${scan.id}`);
-                            const vulns = scanDetail.vulnerabilities || [];
-                            const criticalCount = vulns.filter(v => v.severity === 'critical').length;
-                            const highCount = vulns.filter(v => v.severity === 'high').length;
-                            issuesHtml = `<span class="badge badge-critical">${criticalCount}</span> <span class="badge badge-high">${highCount}</span>`;
-                        } catch(e) { issuesHtml = '--'; }
-                    }
-                    const started = new Date(scan.startedAt).toLocaleString();
-                    const duration = scan.duration ? `${scan.duration}s` : '--';
+                const recentScans = scans.slice(0, 5);
+                
+                for (const scan of recentScans) {
+                    const started = new Date(scan.started_at).toLocaleString();
+                    const duration = scan.duration_seconds ? `${scan.duration_seconds}s` : '--';
                     const statusBadge = scan.status === 'completed' ? '<span class="badge badge-info">Completed</span>' : '<span class="badge badge-warning">Pending</span>';
+                    
+                    // Get issues count for this scan
+                    let issuesHtml = '--';
+                    if (scan.status === 'completed') {
+                        const scanDetail = await fetchJSON(`/api/scans/${scan.id}`);
+                        const vulns = scanDetail.vulnerabilities || [];
+                        const criticalCount = vulns.filter(v => v.severity === 'critical').length;
+                        const highCount = vulns.filter(v => v.severity === 'high').length;
+                        issuesHtml = `<span class="badge badge-critical">${criticalCount}</span> <span class="badge badge-high">${highCount}</span>`;
+                    }
+                    
                     tbody.innerHTML += `
                         <tr>
-                            <td>${scan.targetUrl}</td>
+                            <td>${escapeHtml(scan.target_url)}</td>
                             <td>${started}</td>
                             <td>${duration}</td>
                             <td>${issuesHtml}</td>
@@ -348,15 +359,17 @@
             }
         }
 
-        // Load critical issues (vulnerabilities with severity=critical and status=open)
+        // Load critical issues
         async function loadCriticalIssues() {
             try {
                 const vulns = await fetchJSON('/api/vulnerabilities?severity=critical&status=open');
                 const container = document.getElementById('criticalIssuesList');
+                
                 if (!vulns.length) {
                     container.innerHTML = '<div class="issue-item"><div class="issue-content"><p>No critical open issues. Great job!</p></div></div>';
                     return;
                 }
+                
                 container.innerHTML = '';
                 vulns.forEach(v => {
                     const issueDiv = document.createElement('div');
@@ -381,22 +394,10 @@
                 });
             } catch (err) {
                 console.error('Failed to load critical issues:', err);
-                document.getElementById('criticalIssuesList').innerHTML = '<div class="issue-item"><div class="issue-content">Error loading issues</div></div>';
             }
         }
 
-        // Helper to escape HTML
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            });
-        }
-
-        // Fix vulnerability (mark as fixed)
+        // Fix vulnerability
         async function fixVulnerability(id) {
             try {
                 await fetchJSON(`/api/vulnerabilities/${id}/status`, {
@@ -411,6 +412,7 @@
             }
         }
 
+        // Ignore vulnerability
         async function ignoreVulnerability(id) {
             try {
                 await fetchJSON(`/api/vulnerabilities/${id}/status`, {
@@ -425,66 +427,7 @@
             }
         }
 
-        // Load trends and update chart
-        async function loadTrends() {
-            try {
-                const trends = await fetchJSON('/api/dashboard/trends');
-                if (vulnerabilityChart) {
-                    vulnerabilityChart.data.datasets[0].data = trends.critical;
-                    vulnerabilityChart.data.datasets[1].data = trends.high;
-                    vulnerabilityChart.data.datasets[2].data = trends.medium;
-                    vulnerabilityChart.update();
-                }
-                // Also update threat distribution (pie chart) – we can fetch from vulnerabilities stats
-                const stats = await fetchJSON('/api/dashboard/stats');
-                // For threat distribution, we can compute from vulnerability counts by severity (simulate)
-                // But backend doesn't provide that directly, so we'll use static data for now
-                // Or we can fetch all vulnerabilities and count severity
-                const allVulns = await fetchJSON('/api/vulnerabilities');
-                const severityCounts = { critical:0, high:0, medium:0, low:0 };
-                allVulns.forEach(v => { severityCounts[v.severity]++; });
-                if (threatChart) {
-                    threatChart.data.datasets[0].data = [severityCounts.critical, severityCounts.high, severityCounts.medium, severityCounts.low];
-                    threatChart.update();
-                }
-            } catch (err) {
-                console.error('Failed to load trends:', err);
-            }
-        }
-
-        // Initialize charts (must be after DOM ready)
-        function initCharts() {
-            const vulnCtx = document.getElementById('vulnerabilityChart').getContext('2d');
-            vulnerabilityChart = new Chart(vulnCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                    datasets: [
-                        { label: 'Critical', data: [0,0,0,0,0,0,0], borderColor: '#ff3e41', backgroundColor: 'rgba(255,62,65,0.1)', tension: 0.4 },
-                        { label: 'High', data: [0,0,0,0,0,0,0], borderColor: '#ff9800', backgroundColor: 'rgba(255,152,0,0.1)', tension: 0.4 },
-                        { label: 'Medium', data: [0,0,0,0,0,0,0], borderColor: '#ffc107', backgroundColor: 'rgba(255,193,7,0.1)', tension: 0.4 }
-                    ]
-                },
-                options: { responsive: true, plugins: { legend: { position: 'top' } } }
-            });
-            const threatCtx = document.getElementById('threatChart').getContext('2d');
-            threatChart = new Chart(threatCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Critical', 'High', 'Medium', 'Low'],
-                    datasets: [{ data: [0,0,0,0], backgroundColor: ['#ff3e41','#ff9800','#ffc107','#4caf50'] }]
-                },
-                options: { responsive: true, plugins: { legend: { position: 'right' } } }
-            });
-        }
-
-        // Logout function
-        async function logout() {
-            await fetch('/api/auth/logout', { method: 'POST' });
-            window.location.href = '/login.html';
-        }
-
-        // Fix all critical (bulk update)
+        // Fix all critical
         async function fixAllCritical() {
             try {
                 const vulns = await fetchJSON('/api/vulnerabilities?severity=critical&status=open');
@@ -502,18 +445,90 @@
             }
         }
 
-        // Main initialization
+        // Load trends and update chart
+        async function loadTrends() {
+            try {
+                const trends = await fetchJSON('/api/dashboard/trends');
+                if (vulnerabilityChart) {
+                    vulnerabilityChart.data.datasets[0].data = trends.critical;
+                    vulnerabilityChart.data.datasets[1].data = trends.high;
+                    vulnerabilityChart.data.datasets[2].data = trends.medium;
+                    vulnerabilityChart.update();
+                }
+            } catch (err) {
+                console.error('Failed to load trends:', err);
+            }
+        }
+
+        // Update threat distribution chart
+        async function updateThreatChart() {
+            try {
+                const vulns = await fetchJSON('/api/vulnerabilities');
+                const severityCounts = { critical: 0, high: 0, medium: 0, low: 0 };
+                vulns.forEach(v => { severityCounts[v.severity]++; });
+                
+                if (threatChart) {
+                    threatChart.data.datasets[0].data = [severityCounts.critical, severityCounts.high, severityCounts.medium, severityCounts.low];
+                    threatChart.update();
+                }
+            } catch (err) {
+                console.error('Failed to update threat chart:', err);
+            }
+        }
+
+        // Initialize charts
+        function initCharts() {
+            const vulnCtx = document.getElementById('vulnerabilityChart').getContext('2d');
+            vulnerabilityChart = new Chart(vulnCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [
+                        { label: 'Critical', data: [0,0,0,0,0,0,0], borderColor: '#ff3e41', backgroundColor: 'rgba(255,62,65,0.1)', tension: 0.4 },
+                        { label: 'High', data: [0,0,0,0,0,0,0], borderColor: '#ff9800', backgroundColor: 'rgba(255,152,0,0.1)', tension: 0.4 },
+                        { label: 'Medium', data: [0,0,0,0,0,0,0], borderColor: '#ffc107', backgroundColor: 'rgba(255,193,7,0.1)', tension: 0.4 }
+                    ]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'top' } } }
+            });
+            
+            const threatCtx = document.getElementById('threatChart').getContext('2d');
+            threatChart = new Chart(threatCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Critical', 'High', 'Medium', 'Low'],
+                    datasets: [{ data: [0,0,0,0], backgroundColor: ['#ff3e41','#ff9800','#ffc107','#4caf50'] }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'right' } } }
+            });
+        }
+
+        // Logout
+        async function logout() {
+            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+            window.location.href = '/login.html';
+        }
+
+        // Helper function
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]);
+        }
+
+        // Initialize everything
         window.addEventListener('DOMContentLoaded', async () => {
             const authenticated = await checkAuth();
             if (!authenticated) return;
+            
             initCharts();
             await loadStats();
             await loadRecentScans();
             await loadCriticalIssues();
             await loadTrends();
+            await updateThreatChart();
+            
             document.getElementById('logoutBtn').addEventListener('click', logout);
             document.getElementById('fixAllCriticalBtn').addEventListener('click', fixAllCritical);
-            document.getElementById('trendPeriod').addEventListener('change', () => loadTrends()); // placeholder for future dynamic period
         });
     </script>
 </body>
