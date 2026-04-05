@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>֎🇦🇮 Rakshak - Login</title>
+    <title>֎🇦🇮 Rakshak - Register</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/main.css">
@@ -34,7 +34,7 @@
             border-radius: 15px;
             padding: 3rem;
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
             position: relative;
@@ -85,13 +85,31 @@
             text-decoration: none;
         }
         
-        .security-notice {
-            background: rgba(42, 117, 255, 0.1);
-            border: 1px solid rgba(42, 117, 255, 0.3);
-            border-radius: 8px;
-            padding: 1rem;
-            margin-top: 1.5rem;
+        .password-strength {
+            margin-top: 0.5rem;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .strength-bar {
+            height: 100%;
+            transition: width 0.3s;
+        }
+        
+        .strength-text {
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+        }
+        
+        .terms {
             font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .terms a {
+            color: var(--primary);
         }
         
         .cyber-grid {
@@ -118,6 +136,12 @@
             height: 100%;
             width: 1px;
         }
+        
+        .name-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -135,56 +159,78 @@
                     <img src="https://via.placeholder.com/50x50" alt="Rakshak Logo">
                     <span class="auth-logo-text">RAKSHAK</span>
                 </div>
-                <h2 class="auth-title">Welcome Back</h2>
-                <p class="auth-subtitle">Sign in to your security dashboard</p>
+                <h2 class="auth-title">Create Account</h2>
+                <p class="auth-subtitle">Join thousands securing their web applications</p>
             </div>
             
-            <form id="loginForm">
-                <div class="form-group">
-                    <label class="form-label">Email Address</label>
-                    <input type="email" class="form-control" placeholder="security@company.com" required>
+            <form id="registerForm">
+                <div class="name-group">
+                    <div class="form-group">
+                        <label class="form-label">First Name</label>
+                        <input type="text" id="firstName" class="form-control" placeholder="John" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Last Name</label>
+                        <input type="text" id="lastName" class="form-control" placeholder="Doe" required>
+                    </div>
                 </div>
                 
                 <div class="form-group">
-                    <div class="form-label-group">
-                        <label class="form-label">Password</label>
-                        <a href="#" style="float: right; font-size: 0.9rem; color: var(--primary);">Forgot?</a>
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="email" class="form-control" placeholder="security@company.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Company</label>
+                    <input type="text" id="company" class="form-control" placeholder="Your Company Name">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" placeholder="••••••••" required>
+                    <div class="password-strength">
+                        <div class="strength-bar" id="strengthBar"></div>
                     </div>
-                    <input type="password" class="form-control" placeholder="••••••••" required>
+                    <div class="strength-text" id="strengthText">Password strength</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Confirm Password</label>
+                    <input type="password" class="form-control" id="confirmPassword" placeholder="••••••••" required>
+                    <div class="error-text" id="passwordError" style="color: #ff3e41; font-size: 0.8rem; display: none;">Passwords don't match</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Security Plan</label>
+                    <select class="form-control">
+                        <option>Free (1 website, basic scanning)</option>
+                        <option>Pro (10 websites, advanced scanning)</option>
+                        <option>Enterprise (Unlimited websites, full features)</option>
+                    </select>
                 </div>
                 
                 <div class="form-group">
                     <label class="checkbox">
-                        <input type="checkbox" checked> Remember me
+                        <input type="checkbox" required> I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label class="checkbox">
+                        <input type="checkbox"> Subscribe to security updates and tips
                     </label>
                 </div>
                 
                 <button type="submit" class="btn btn-primary btn-block">
-                    <i class="fas fa-lock"></i> Sign In
+                    <i class="fas fa-user-plus"></i> Create Account
                 </button>
                 
-                <div class="divider">
-                    <span>or continue with</span>
-                </div>
-                
-                <div class="social-login">
-                    <button type="button" class="btn btn-outline btn-block">
-                        <i class="fab fa-google"></i> Google
-                    </button>
-                    <button type="button" class="btn btn-outline btn-block mt-2">
-                        <i class="fab fa-github"></i> GitHub
-                    </button>
-                </div>
-                
-                <div class="security-notice">
-                    <i class="fas fa-shield-alt"></i> Your security is our priority. All data is encrypted and protected.
+                <div class="auth-footer">
+                    <p>Already have an account? <a href="login.html">Sign in</a></p>
+                    <p><a href="index.html">← Back to homepage</a></p>
                 </div>
             </form>
-            
-            <div class="auth-footer">
-                <p>Don't have an account? <a href="register.html">Create one now</a></p>
-                <p><a href="index.html">← Back to homepage</a></p>
-            </div>
         </div>
     </div>
 
@@ -207,13 +253,90 @@
             grid.appendChild(horizontalLine);
         }
         
-        // Form submission
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            // In a real app, this would authenticate with backend
-            alert('Login successful! Redirecting to dashboard...');
-            window.location.href = 'dashboard.html';
+        // Password strength checker
+        const passwordInput = document.getElementById('password');
+        const strengthBar = document.getElementById('strengthBar');
+        const strengthText = document.getElementById('strengthText');
+        
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            let strength = 0;
+            let color = '#ff3e41';
+            let text = 'Very Weak';
+            
+            if (password.length >= 8) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            
+            switch(strength) {
+                case 0:
+                case 1:
+                    color = '#ff3e41';
+                    text = 'Weak';
+                    break;
+                case 2:
+                    color = '#ff9800';
+                    text = 'Fair';
+                    break;
+                case 3:
+                    color = '#ffc107';
+                    text = 'Good';
+                    break;
+                case 4:
+                    color = '#4caf50';
+                    text = 'Strong';
+                    break;
+            }
+            
+            strengthBar.style.width = `${strength * 25}%`;
+            strengthBar.style.background = color;
+            strengthText.textContent = text;
+            strengthText.style.color = color;
         });
+        
+        // Password confirmation
+        const confirmInput = document.getElementById('confirmPassword');
+        const passwordError = document.getElementById('passwordError');
+        
+        confirmInput.addEventListener('input', function() {
+            if (passwordInput.value !== this.value) {
+                passwordError.style.display = 'block';
+            } else {
+                passwordError.style.display = 'none';
+            }
+        });
+        
+        // ========== MODIFIED: Backend registration handler ==========
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const company = document.getElementById('company').value;
+            
+            if (password !== confirmInput.value) {
+                alert('Passwords do not match!');
+                return;
+            }
+            
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ firstName, lastName, email, password, company })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                window.location.href = 'dashboard.html';
+            } else {
+                alert(data.error || 'Registration failed');
+            }
+        });
+        // ============================================================
     </script>
 </body>
 </html>
