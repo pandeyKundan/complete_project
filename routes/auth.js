@@ -53,4 +53,4 @@ router.get('/me', async (req, res) => {
   res.json({ user });
 });
 
-module.exports = router;  // <-- MUST export router
+module.exports = router;
