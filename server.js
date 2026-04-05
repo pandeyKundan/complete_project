@@ -52,7 +52,7 @@ app.use(errorHandler);
 initDatabase().then(() => {
   app.listen(PORT, () => {
     console.log(`🚀 Rakshak backend running on http://localhost:${PORT}`);
-    console.log(`📄 Homepage: http://localhost:${PORT}/`);
+    console.log(`📄 Homepage: http://localhost:${PORT}/index.html`);
     console.log(`🔐 Login: http://localhost:${PORT}/login.html`);
     console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard.html`);
   });
