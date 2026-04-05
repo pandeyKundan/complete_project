@@ -38,4 +38,4 @@ router.put('/:id/status', isAuthenticated, async (req, res) => {
   }
 });
 
-module.exports = router;
+module.exports = router;  // <-- MUST export router
