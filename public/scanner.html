@@ -117,6 +117,11 @@
             padding: 1.5rem;
             margin-top: 1.5rem;
         }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -341,15 +346,17 @@
     <script src="js/scanner.js"></script>
     
     <script>
-        // Global variables
         let currentScanType = 'quick';
         let pollInterval = null;
         let currentScanId = null;
         let scanStartTime = null;
 
-        // Helper: fetch JSON with error handling
+        // Helper function for API calls
         async function fetchJSON(url, options = {}) {
-            const res = await fetch(url, options);
+            const res = await fetch(url, {
+                ...options,
+                credentials: 'include'  // Important for session cookies
+            });
             if (!res.ok) {
                 const err = await res.json().catch(() => ({ error: 'Request failed' }));
                 throw new Error(err.error || `HTTP ${res.status}`);
@@ -357,13 +364,13 @@
             return res.json();
         }
 
-        // Check authentication and load user info
+        // Check authentication
         async function checkAuth() {
             try {
                 const data = await fetchJSON('/api/auth/me');
-                const user = data.user;
-                document.getElementById('userName').innerText = user.first_name + ' ' + user.last_name;
-                // Also fetch critical count for badge
+                document.getElementById('userName').innerText = data.user.first_name + ' ' + data.user.last_name;
+                
+                // Update critical badge
                 const stats = await fetchJSON('/api/dashboard/stats');
                 document.getElementById('criticalBadge').innerText = stats.criticalIssues || 0;
                 return true;
@@ -374,7 +381,7 @@
             }
         }
 
-        // Select scan type (Quick/Full/Custom)
+        // Select scan type
         function selectScanType(type, element) {
             currentScanType = type;
             document.querySelectorAll('.scan-type-card').forEach(card => {
@@ -383,7 +390,7 @@
             if (element) element.classList.add('active');
         }
 
-        // Start a new scan
+        // Start scan
         async function startScan() {
             const targetUrl = document.getElementById('targetUrl').value.trim();
             if (!targetUrl) {
@@ -391,7 +398,6 @@
                 return;
             }
 
-            // Disable start button during scan
             const startBtn = document.getElementById('startScanBtn');
             startBtn.disabled = true;
             startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starting...';
@@ -402,6 +408,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ targetUrl, scanType: currentScanType })
                 });
+                
                 currentScanId = data.scanId;
                 scanStartTime = Date.now();
 
@@ -418,6 +425,7 @@
                 document.getElementById('mediumCount').innerHTML = '0 Medium';
                 document.getElementById('currentTest').innerText = 'Scan initialized...';
                 document.getElementById('testDescription').innerText = 'Waiting for scan to start';
+                document.getElementById('scanTimer').innerText = '00:00';
                 
                 // Start polling for status
                 startPolling();
@@ -429,34 +437,39 @@
             }
         }
 
-        // Poll scan status every 2 seconds
+        // Poll scan status
         function startPolling() {
             if (pollInterval) clearInterval(pollInterval);
             pollInterval = setInterval(async () => {
                 if (!currentScanId) return;
                 try {
                     const scan = await fetchJSON(`/api/scans/${currentScanId}`);
-                    // Update progress bar
+                    
+                    // Update progress
                     const progress = scan.progress || 0;
                     document.getElementById('progressBar').style.width = progress + '%';
                     document.getElementById('progressPercent').innerText = progress + '%';
                     document.getElementById('progressText').innerText = `Scanning... ${progress}% complete`;
                     
                     // Update timer
-                    if (scanStartTime) {
+                    if (scanStartTime && progress < 100) {
                         const elapsed = Math.floor((Date.now() - scanStartTime) / 1000);
                         const mins = Math.floor(elapsed / 60);
                         const secs = elapsed % 60;
                         document.getElementById('scanTimer').innerText = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
                     }
                     
-                    // Update current test (if available from scan object – not provided by default, so we show generic)
+                    // Update current test display
                     if (progress < 100) {
-                        document.getElementById('currentTest').innerText = `Scan in progress (${progress}%)`;
-                        document.getElementById('testDescription').innerText = 'Simulating security tests...';
+                        const tests = ['Initializing', 'Network Discovery', 'Port Scanning', 'SQL Injection', 'XSS Testing', 'CSRF Testing', 'Directory Traversal', 'SSL/TLS Analysis', 'Finalizing'];
+                        const testIndex = Math.floor(progress / 12);
+                        if (testIndex < tests.length) {
+                            document.getElementById('currentTest').innerText = tests[testIndex];
+                            document.getElementById('testDescription').innerText = `Testing for ${tests[testIndex].toLowerCase()} vulnerabilities...`;
+                        }
                     }
                     
-                    // Update issues count from vulnerabilities found so far
+                    // Update vulnerability counts
                     const vulns = scan.vulnerabilities || [];
                     const criticalCount = vulns.filter(v => v.severity === 'critical').length;
                     const highCount = vulns.filter(v => v.severity === 'high').length;
@@ -466,7 +479,7 @@
                     document.getElementById('highCount').innerHTML = `${highCount} High`;
                     document.getElementById('mediumCount').innerHTML = `${mediumCount} Medium`;
                     
-                    // If scan completed, stop polling and show results
+                    // If scan completed, show results
                     if (scan.status === 'completed') {
                         clearInterval(pollInterval);
                         pollInterval = null;
@@ -474,15 +487,14 @@
                     }
                 } catch (err) {
                     console.error('Polling error:', err);
-                    // If scan not found or error, stop polling
                     clearInterval(pollInterval);
                     pollInterval = null;
-                    alert('Error checking scan status');
+                    alert('Error checking scan status: ' + err.message);
                 }
             }, 2000);
         }
 
-        // Stop scan (currently not implemented on backend, but we can stop polling and inform user)
+        // Stop scan (stop polling only - backend doesn't support cancellation yet)
         function stopScan() {
             if (pollInterval) {
                 clearInterval(pollInterval);
@@ -490,7 +502,6 @@
             }
             alert('Scan stopped. Results may be incomplete.');
             document.getElementById('scanProgress').style.display = 'none';
-            // Optionally, you could also call an API to cancel the scan, but backend doesn't have that yet.
         }
 
         // Show results after scan completes
@@ -505,16 +516,22 @@
             const total = vulns.length;
             
             document.getElementById('totalIssues').innerText = total;
+            
+            // Calculate duration
             const duration = scan.duration_seconds || 0;
-            document.getElementById('scanDuration').innerText = `${duration}s`;
+            const mins = Math.floor(duration / 60);
+            const secs = duration % 60;
+            document.getElementById('scanDuration').innerText = mins > 0 ? `${mins}m ${secs}s` : `${duration}s`;
+            
             const score = scan.security_score || 100;
             document.getElementById('securityScore').innerText = score + '%';
             
             // Build vulnerabilities list
             const resultsList = document.getElementById('resultsList');
             resultsList.innerHTML = '';
+            
             if (vulns.length === 0) {
-                resultsList.innerHTML = '<div class="result-item">No vulnerabilities found. Great job!</div>';
+                resultsList.innerHTML = '<div class="result-item"><div class="result-content"><h5>No vulnerabilities found!</h5><p>Great job! Your application appears secure.</p></div></div>';
             } else {
                 vulns.forEach(v => {
                     const div = document.createElement('div');
@@ -526,20 +543,21 @@
                         <div class="result-content">
                             <h5>${escapeHtml(v.title)}</h5>
                             <p>${escapeHtml(v.description || 'No description')}</p>
-                            <small>Location: ${escapeHtml(v.location || 'Unknown')}</small>
+                            <small><strong>Location:</strong> ${escapeHtml(v.location || 'Unknown')}</small>
                         </div>
                     `;
                     resultsList.appendChild(div);
                 });
             }
             
-            // Generate recommendations based on found vulnerabilities
+            // Generate recommendations
             const recList = document.getElementById('recommendationsList');
             recList.innerHTML = '';
             const recommendationsSet = new Set();
             vulns.forEach(v => {
                 if (v.remediation) recommendationsSet.add(v.remediation);
             });
+            
             if (recommendationsSet.size === 0) {
                 recList.innerHTML = '<li>No specific recommendations. Your application appears secure.</li>';
             } else {
@@ -551,31 +569,23 @@
             }
         }
 
-        // Helper to escape HTML
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            });
-        }
-
-        // Export report (placeholder – you can implement a real report generation later)
+        // Export report
         async function exportReport() {
             if (!currentScanId) {
                 alert('No scan to export');
                 return;
             }
-            // Optionally generate a report via backend
             try {
                 const reportData = await fetchJSON('/api/reports/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ scanId: currentScanId, reportType: 'scan', title: `Scan Report ${new Date().toLocaleString()}` })
+                    body: JSON.stringify({ 
+                        scanId: currentScanId, 
+                        reportType: 'scan', 
+                        title: `Scan Report ${new Date().toLocaleString()}` 
+                    })
                 });
-                alert(`Report generated with ID: ${reportData.reportId}. You can view it in Reports page.`);
+                alert(`Report generated! You can view it in the Reports page.`);
             } catch (err) {
                 alert('Could not generate report: ' + err.message);
             }
@@ -583,34 +593,35 @@
 
         // Logout
         async function logout() {
-            await fetch('/api/auth/logout', { method: 'POST' });
+            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
             window.location.href = '/login.html';
         }
 
-        // Event listeners setup
-        function init() {
-            // Auth check first
-            checkAuth().then(() => {
-                // Setup scan type selection
-                document.querySelectorAll('.scan-type-card').forEach(card => {
-                    card.addEventListener('click', (e) => {
-                        const type = card.getAttribute('data-scan-type');
-                        if (type) selectScanType(type, card);
-                    });
-                });
-                // Start scan button
-                document.getElementById('startScanBtn').addEventListener('click', startScan);
-                // Stop scan button
-                document.getElementById('stopScanBtn').addEventListener('click', stopScan);
-                // Export report button
-                document.getElementById('exportReportBtn').addEventListener('click', exportReport);
-                // Logout button
-                document.getElementById('logoutBtn').addEventListener('click', logout);
-            });
+        // Helper function
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]);
         }
 
-        // Run init when DOM ready
-        document.addEventListener('DOMContentLoaded', init);
+        // Initialize
+        window.addEventListener('DOMContentLoaded', async () => {
+            const authenticated = await checkAuth();
+            if (!authenticated) return;
+            
+            // Setup scan type selection
+            document.querySelectorAll('.scan-type-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    const type = card.getAttribute('data-scan-type');
+                    if (type) selectScanType(type, card);
+                });
+            });
+            
+            // Setup buttons
+            document.getElementById('startScanBtn').addEventListener('click', startScan);
+            document.getElementById('stopScanBtn').addEventListener('click', stopScan);
+            document.getElementById('exportReportBtn').addEventListener('click', exportReport);
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+        });
     </script>
 </body>
 </html>
