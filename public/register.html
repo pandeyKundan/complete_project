@@ -142,6 +142,20 @@
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
         }
+        
+        .error-message {
+            color: #ff3e41;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+        
+        .success-message {
+            color: #4caf50;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -202,27 +216,15 @@
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">Security Plan</label>
-                    <select class="form-control">
-                        <option>Free (1 website, basic scanning)</option>
-                        <option>Pro (10 websites, advanced scanning)</option>
-                        <option>Enterprise (Unlimited websites, full features)</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
                     <label class="checkbox">
-                        <input type="checkbox" required> I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                        <input type="checkbox" id="termsCheckbox" required> I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
                     </label>
                 </div>
                 
-                <div class="form-group">
-                    <label class="checkbox">
-                        <input type="checkbox"> Subscribe to security updates and tips
-                    </label>
-                </div>
+                <div id="registerError" class="error-message" style="display: none;"></div>
+                <div id="registerSuccess" class="success-message" style="display: none;"></div>
                 
-                <button type="submit" class="btn btn-primary btn-block">
+                <button type="submit" class="btn btn-primary btn-block" id="registerBtn">
                     <i class="fas fa-user-plus"></i> Create Account
                 </button>
                 
@@ -252,6 +254,21 @@
             horizontalLine.style.top = `${i * gridSize}px`;
             grid.appendChild(horizontalLine);
         }
+        
+        // Check if already logged in - redirect to dashboard
+        async function checkAlreadyLoggedIn() {
+            try {
+                const res = await fetch('/api/auth/me', {
+                    credentials: 'include'
+                });
+                if (res.ok) {
+                    window.location.href = '/dashboard.html';
+                }
+            } catch(e) {
+                // Not logged in, stay on register page
+            }
+        }
+        checkAlreadyLoggedIn();
         
         // Password strength checker
         const passwordInput = document.getElementById('password');
@@ -307,7 +324,7 @@
             }
         });
         
-        // ========== MODIFIED: Backend registration handler ==========
+        // Register form submission
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -316,27 +333,77 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const company = document.getElementById('company').value;
+            const termsAccepted = document.getElementById('termsCheckbox').checked;
             
-            if (password !== confirmInput.value) {
-                alert('Passwords do not match!');
+            const errorDiv = document.getElementById('registerError');
+            const successDiv = document.getElementById('registerSuccess');
+            const registerBtn = document.getElementById('registerBtn');
+            
+            // Clear previous messages
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            
+            // Validation
+            if (!firstName || !lastName || !email || !password) {
+                errorDiv.textContent = 'Please fill in all required fields.';
+                errorDiv.style.display = 'block';
                 return;
             }
             
-            const response = await fetch('/api/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ firstName, lastName, email, password, company })
-            });
+            if (password !== confirmInput.value) {
+                errorDiv.textContent = 'Passwords do not match!';
+                errorDiv.style.display = 'block';
+                return;
+            }
             
-            const data = await response.json();
+            if (password.length < 6) {
+                errorDiv.textContent = 'Password must be at least 6 characters long.';
+                errorDiv.style.display = 'block';
+                return;
+            }
             
-            if (response.ok) {
-                window.location.href = 'dashboard.html';
-            } else {
-                alert(data.error || 'Registration failed');
+            if (!termsAccepted) {
+                errorDiv.textContent = 'Please accept the Terms of Service and Privacy Policy.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // Disable button and show loading
+            registerBtn.disabled = true;
+            registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ firstName, lastName, email, password, company }),
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    successDiv.textContent = 'Account created successfully! Redirecting to dashboard...';
+                    successDiv.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        window.location.href = '/dashboard.html';
+                    }, 1500);
+                } else {
+                    errorDiv.textContent = data.error || 'Registration failed. Please try again.';
+                    errorDiv.style.display = 'block';
+                    registerBtn.disabled = false;
+                    registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+                }
+            } catch (err) {
+                errorDiv.textContent = 'Network error. Please try again.';
+                errorDiv.style.display = 'block';
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
             }
         });
-        // ============================================================
     </script>
 </body>
 </html>
