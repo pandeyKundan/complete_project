@@ -40,4 +40,4 @@ router.get('/', isAuthenticated, async (req, res) => {
   }
 });
 
-module.exports = router;  // <-- MUST export router
+module.exports = router;
