@@ -99,22 +99,39 @@
         let trendChart, threatChart;
         
         async function fetchJSON(url, options = {}) {
-            const res = await fetch(url, { ...options, credentials: 'include' });
-            if (!res.ok) {
-                const error = await res.text();
-                throw new Error(error || `HTTP ${res.status}`);
+            try {
+                const res = await fetch(url, { 
+                    ...options, 
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        window.location.href = '/login.html';
+                        return null;
+                    }
+                    const errorText = await res.text();
+                    throw new Error(`HTTP ${res.status}: ${errorText}`);
+                }
+                return await res.json();
+            } catch (err) {
+                console.error('Fetch error:', err);
+                throw err;
             }
-            return res.json();
         }
         
         async function checkAuth() {
             try {
                 const data = await fetchJSON('/api/auth/me');
-                document.getElementById('userName').innerText = data.user.first_name + ' ' + data.user.last_name;
-                return true;
+                if (data && data.user) {
+                    document.getElementById('userName').innerText = data.user.first_name + ' ' + data.user.last_name;
+                    return true;
+                }
+                return false;
             } catch(e) { 
-                console.log('Not authenticated, redirecting to login...');
-                window.location.href = '/login.html'; 
+                console.log('Auth check failed:', e);
+                window.location.href = '/login.html';
                 return false; 
             }
         }
@@ -122,8 +139,11 @@
         async function loadDashboard() {
             try {
                 const stats = await fetchJSON('/api/dashboard/stats');
-                document.getElementById('securityScore').innerText = stats.securityScore + '%';
-                document.getElementById('scoreBar').style.width = stats.securityScore + '%';
+                if (!stats) return;
+                
+                const score = stats.securityScore || 0;
+                document.getElementById('securityScore').innerText = score + '%';
+                document.getElementById('scoreBar').style.width = score + '%';
                 document.getElementById('criticalIssues').innerText = stats.criticalIssues || 0;
                 document.getElementById('totalVulns').innerText = stats.totalVulnerabilities || 0;
                 
@@ -133,7 +153,9 @@
                 }
             } catch(e) { 
                 console.error('Dashboard load error:', e);
-                document.getElementById('securityScore').innerText = 'Error';
+                document.getElementById('securityScore').innerText = '0%';
+                document.getElementById('criticalIssues').innerText = '0';
+                document.getElementById('totalVulns').innerText = '0';
             }
         }
         
@@ -150,7 +172,7 @@
                         <td>${escapeHtml(s.target_url)}</td>
                         <td>${new Date(s.started_at).toLocaleString()}</td>
                         <td><span class="badge ${s.status === 'completed' ? 'badge-info' : ''}">${s.status}</span></td>
-                        <td><button class="btn btn-sm btn-outline" onclick="alert('View report feature coming soon')">View</button></td>
+                        <td><button class="btn btn-sm btn-outline" onclick="alert('View report coming soon')">View</button></td>
                     </tr>
                 `).join('');
             } catch(e) { 
@@ -186,7 +208,6 @@
             try {
                 await fetchJSON(`/api/vulnerabilities/${id}/status`, { 
                     method: 'PUT', 
-                    headers: { 'Content-Type': 'application/json' }, 
                     body: JSON.stringify({ status: 'fixed' }) 
                 });
                 alert('Vulnerability marked as fixed! Refreshing...');
@@ -198,7 +219,9 @@
         
         async function loadCharts() {
             try {
+                // Load trends data
                 const trends = await fetchJSON('/api/dashboard/trends');
+                
                 if (trendChart) trendChart.destroy();
                 const ctx = document.getElementById('trendChart').getContext('2d');
                 trendChart = new Chart(ctx, { 
@@ -206,16 +229,24 @@
                     data: { 
                         labels: trends.labels || ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], 
                         datasets: [
-                            { label: 'Critical', data: trends.critical || [0,0,0,0,0,0,0], borderColor: '#ff3e41', tension: 0.4 },
-                            { label: 'High', data: trends.high || [0,0,0,0,0,0,0], borderColor: '#ff9800', tension: 0.4 },
-                            { label: 'Medium', data: trends.medium || [0,0,0,0,0,0,0], borderColor: '#ffc107', tension: 0.4 }
+                            { label: 'Critical', data: trends.critical || [0,0,0,0,0,0,0], borderColor: '#ff3e41', backgroundColor: 'rgba(255,62,65,0.1)', tension: 0.4, fill: true },
+                            { label: 'High', data: trends.high || [0,0,0,0,0,0,0], borderColor: '#ff9800', backgroundColor: 'rgba(255,152,0,0.1)', tension: 0.4, fill: true },
+                            { label: 'Medium', data: trends.medium || [0,0,0,0,0,0,0], borderColor: '#ffc107', backgroundColor: 'rgba(255,193,7,0.1)', tension: 0.4, fill: true }
                         ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'top' } }
                     }
                 });
                 
+                // Load vulnerability counts for threat chart
                 const vulns = await fetchJSON('/api/vulnerabilities');
                 const counts = { critical:0, high:0, medium:0, low:0 };
-                vulns.forEach(v => { if(counts[v.severity] !== undefined) counts[v.severity]++; });
+                if (vulns && vulns.length) {
+                    vulns.forEach(v => { if(counts[v.severity] !== undefined) counts[v.severity]++; });
+                }
                 
                 if (threatChart) threatChart.destroy();
                 const ctx2 = document.getElementById('threatChart').getContext('2d');
@@ -225,11 +256,28 @@
                         labels: ['Critical', 'High', 'Medium', 'Low'], 
                         datasets: [{ 
                             data: [counts.critical, counts.high, counts.medium, counts.low], 
-                            backgroundColor: ['#ff3e41','#ff9800','#ffc107','#4caf50'] 
+                            backgroundColor: ['#ff3e41','#ff9800','#ffc107','#4caf50'],
+                            borderWidth: 0
                         }] 
-                    } 
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'right' } }
+                    }
                 });
-            } catch(e) { console.error('Charts error:', e); }
+            } catch(e) { 
+                console.error('Charts error:', e);
+                // Create empty charts if API fails
+                if (!trendChart) {
+                    const ctx = document.getElementById('trendChart').getContext('2d');
+                    trendChart = new Chart(ctx, { type: 'line', data: { labels: [], datasets: [] } });
+                }
+                if (!threatChart) {
+                    const ctx2 = document.getElementById('threatChart').getContext('2d');
+                    threatChart = new Chart(ctx2, { type: 'doughnut', data: { labels: [], datasets: [] } });
+                }
+            }
         }
         
         function escapeHtml(str) {
