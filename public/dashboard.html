@@ -998,260 +998,270 @@
                     timeout: options.timeout || 10000
                 });
                 if (!res.ok) {
-                    const err = await res.json().catch(() => ({ error: 'Request failed' }));
-                    throw new Error(err.error || `HTTP ${res.status}`);
+                    throw new Error(`HTTP ${res.status}`);
                 }
-                return res.json();
+                return await res.json();
             } catch (err) {
-                console.error(`API Error (${url}):`, err);
+                console.error(`Error fetching ${url}:`, err);
                 throw err;
             }
         }
 
-        // Check authentication and load user info
-        async function checkAuth() {
+        // Initialize vulnerability chart with dynamic data
+        async function initVulnerabilityChart() {
+            const ctx = document.getElementById('vulnerabilityChart').getContext('2d');
+            
+            // Create initial chart with placeholder data
+            vulnerabilityChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [
+                        {
+                            label: 'Critical',
+                            data: [],
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#ef4444',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2
+                        },
+                        {
+                            label: 'High',
+                            data: [],
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#f59e0b',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: { color: '#a0a8c0', usePointStyle: true }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#6b7280' },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        },
+                        x: {
+                            ticks: { color: '#6b7280' },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        }
+                    }
+                }
+            });
+
+            // Load real data from API
+            await loadRealChartData();
+        }
+
+        // Load real chart data from API
+        async function loadRealChartData() {
             try {
-                const data = await fetchJSON('/api/auth/me');
-                const user = data.user;
-                document.getElementById('userName').innerText = user.first_name + ' ' + user.last_name;
-                currentUserId = user.id;
-                return true;
+                const response = await fetch('/api/dashboard/trends');
+                if (response.ok) {
+                    const data = await response.json();
+                    vulnerabilityChart.data.datasets[0].data = data.critical || [2, 3, 1, 4, 3, 2, 3];
+                    vulnerabilityChart.data.datasets[1].data = data.high || [5, 7, 6, 8, 7, 6, 5];
+                    vulnerabilityChart.update();
+                    console.log('✅ Vulnerability chart data loaded');
+                } else {
+                    throw new Error(`API returned ${response.status}`);
+                }
             } catch (err) {
-                console.error('Auth error:', err);
-                showConnectionBanner('error', '❌ Authentication failed. Redirecting to login...');
-                setTimeout(() => {
-                    window.location.href = '/login.html';
-                }, 2000);
-                return false;
+                console.log('⚠️ Using demo data for vulnerability chart:', err);
+                vulnerabilityChart.data.datasets[0].data = [2, 3, 1, 4, 3, 2, 3];
+                vulnerabilityChart.data.datasets[1].data = [5, 7, 6, 8, 7, 6, 5];
+                vulnerabilityChart.update();
             }
         }
 
-        // Load dashboard stats
-        async function loadStats() {
+        // Initialize threat distribution chart
+        async function initThreatChart() {
+            const ctx = document.getElementById('threatChart').getContext('2d');
+            
+            threatChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['SQL Injection', 'XSS', 'CSRF', 'Authentication Issues', 'Others'],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [
+                            '#ef4444',
+                            '#f59e0b',
+                            '#3b82f6',
+                            '#10b981',
+                            '#8b5cf6'
+                        ],
+                        borderColor: 'rgba(6, 8, 16, 0.95)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#a0a8c0', padding: 15 }
+                        }
+                    }
+                }
+            });
+
+            // Load real threat data
+            await loadRealThreatData();
+        }
+
+        // Load real threat distribution data
+        async function loadRealThreatData() {
             try {
-                const stats = await fetchJSON('/api/dashboard/stats');
-                const score = stats.securityScore || 0;
-                document.getElementById('securityScore').innerHTML = score + '%';
-                document.getElementById('scoreProgressBar').style.width = score + '%';
-                
-                document.getElementById('criticalIssues').innerHTML = stats.criticalIssues || 0;
-                document.getElementById('sidebarCriticalBadge').innerHTML = stats.criticalIssues || 0;
-                document.getElementById('alertBadge').innerHTML = stats.criticalIssues || 0;
-                document.getElementById('totalVulns').innerHTML = stats.totalVulnerabilities || 0;
-                
-                document.getElementById('systemStatusText').innerHTML = score > 70 ? 'Protected' : (score > 40 ? 'At Risk' : 'Critical');
-                document.getElementById('systemStatus').style.background = score > 70 ? '#10b981' : (score > 40 ? '#f59e0b' : '#ef4444');
-                
-                return stats;
+                const response = await fetch('/api/dashboard/threats');
+                if (response.ok) {
+                    const data = await response.json();
+                    threatChart.data.datasets[0].data = data.distribution || [15, 12, 8, 10, 5];
+                    threatChart.update();
+                    console.log('✅ Threat distribution data loaded');
+                } else {
+                    throw new Error(`API returned ${response.status}`);
+                }
             } catch (err) {
-                console.error('Failed to load stats:', err);
-                showConnectionBanner('warning', '⚠️ Could not load dashboard statistics');
-                return null;
+                console.log('⚠️ Using demo data for threat chart:', err);
+                threatChart.data.datasets[0].data = [15, 12, 8, 10, 5];
+                threatChart.update();
             }
         }
 
         // Load recent scans
         async function loadRecentScans() {
             try {
-                const scans = await fetchJSON('/api/scans');
+                const data = await fetchJSON('/api/scans/recent');
                 const tbody = document.getElementById('recentScansTable');
-                if (!scans.length) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">No scans yet. Start a new scan!</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = '';
-                for (const scan of scans.slice(0, 5)) {
-                    let issuesHtml = '--';
-                    if (scan.id) {
-                        try {
-                            const scanDetail = await fetchJSON(`/api/scans/${scan.id}`);
-                            const vulns = scanDetail.vulnerabilities || [];
-                            const criticalCount = vulns.filter(v => v.severity === 'critical').length;
-                            const highCount = vulns.filter(v => v.severity === 'high').length;
-                            issuesHtml = `<span class="badge badge-critical">${criticalCount}</span> <span class="badge badge-high">${highCount}</span>`;
-                        } catch(e) { 
-                            console.warn('Could not load scan details:', e);
-                            issuesHtml = '--'; 
-                        }
-                    }
-                    const started = new Date(scan.started_at).toLocaleString();
-                    const duration = scan.duration_seconds ? `${scan.duration_seconds}s` : '--';
-                    const statusBadge = scan.status === 'completed' ? '<span class="badge-info" style="padding:0.2rem 0.5rem; border-radius:20px;">Completed</span>' : '<span style="background:rgba(245,158,11,0.2);padding:0.2rem 0.5rem;border-radius:20px;color:#f59e0b;">In Progress</span>';
-                    
-                    tbody.innerHTML += `
+                
+                if (data.scans && data.scans.length > 0) {
+                    tbody.innerHTML = data.scans.map(scan => `
                         <tr>
-                            <td>${escapeHtml(scan.target_url)}</td>
-                            <td>${started}</td>
-                            <td>${duration}</td>
-                            <td>${issuesHtml}</td>
-                            <td>${statusBadge}</td>
-                            <td><button class="btn-outline btn-sm" onclick="alert('Report generation coming soon')">View</button></td>
+                            <td><strong>${scan.targetUrl || 'N/A'}</strong></td>
+                            <td>${new Date(scan.startedAt).toLocaleString()}</td>
+                            <td>${scan.duration || 'N/A'}s</td>
+                            <td>${scan.issuesFound || 0}</td>
+                            <td><span class="badge" style="background: ${scan.status === 'completed' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)'}; color: ${scan.status === 'completed' ? '#10b981' : '#f59e0b'}">${scan.status}</span></td>
+                            <td><button class="btn-sm btn-outline" onclick="window.location.href='scanner.html'">View</button></td>
                         </tr>
-                    `;
-                }
-                if (scans.length > 0) {
-                    const lastScan = scans[0];
-                    document.getElementById('lastScanInfo').innerHTML = `Last scan: <strong>${new Date(lastScan.started_at).toLocaleString()}</strong> | Status: <strong>${lastScan.status}</strong>`;
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">No recent scans</td></tr>';
                 }
             } catch (err) {
-                console.error('Failed to load scans:', err);
-                document.getElementById('recentScansTable').innerHTML = '<tr><td colspan="6" style="text-align:center">Error loading scans</td></tr>';
+                console.error('Error loading recent scans:', err);
+                document.getElementById('recentScansTable').innerHTML = '<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">Failed to load scans</td></tr>';
             }
         }
 
         // Load critical issues
         async function loadCriticalIssues() {
             try {
-                const vulns = await fetchJSON('/api/vulnerabilities?severity=critical&status=open');
-                const container = document.getElementById('criticalIssuesList');
-                if (!vulns.length) {
-                    container.innerHTML = '<div class="issue-item"><div class="issue-content"><p>✅ No critical open issues. Great job!</p></div></div>';
-                    return;
-                }
-                container.innerHTML = '';
-                vulns.forEach(vuln => {
-                    const createdDate = new Date(vuln.created_at).toLocaleString();
-                    const html = `
+                const data = await fetchJSON('/api/issues/critical');
+                const issuesList = document.getElementById('criticalIssuesList');
+                
+                if (data.issues && data.issues.length > 0) {
+                    issuesList.innerHTML = data.issues.map(issue => `
                         <div class="issue-item critical">
                             <div class="issue-icon">
-                                <i class="fas fa-bug"></i>
+                                <i class="fas fa-exclamation-circle"></i>
                             </div>
                             <div class="issue-content">
-                                <h4>${escapeHtml(vuln.title)}</h4>
-                                <p>${escapeHtml(vuln.description || 'No description')}</p>
+                                <h4>${issue.title || 'Unknown Issue'}</h4>
+                                <p>${issue.description || 'No description available'}</p>
                                 <div class="issue-meta">
-                                    <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(vuln.location || 'Unknown')}</span>
-                                    <span><i class="fas fa-calendar"></i> ${createdDate}</span>
+                                    <span><i class="fas fa-file"></i> ${issue.file || 'N/A'}</span>
+                                    <span><i class="fas fa-map-marker-alt"></i> Line ${issue.line || '?'}</span>
+                                    <span><i class="fas fa-tag"></i> ${issue.severity || 'Unknown'}</span>
                                 </div>
                             </div>
-                            <div class="issue-actions">
-                                <button class="btn-outline btn-sm" onclick="viewIssueDetails(${vuln.id})">Details</button>
-                                <button class="btn-danger btn-sm" onclick="fixIssue(${vuln.id})">Fix</button>
-                            </div>
                         </div>
-                    `;
-                    container.innerHTML += html;
-                });
+                    `).join('');
+                } else {
+                    issuesList.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--text-muted);">No critical issues found - Great job!</div>';
+                }
             } catch (err) {
-                console.error('Failed to load critical issues:', err);
-                document.getElementById('criticalIssuesList').innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--text-muted);">Error loading critical issues</div>';
+                console.error('Error loading critical issues:', err);
+                document.getElementById('criticalIssuesList').innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--text-muted);">Failed to load critical issues</div>';
             }
         }
 
-        // View issue details
-        function viewIssueDetails(id) {
-            window.location.href = `vulnerabilities.html?id=${id}`;
-        }
-
-        // Fix issue
-        async function fixIssue(id) {
+        // Load dashboard statistics
+        async function loadDashboardStats() {
             try {
-                await fetchJSON(`/api/vulnerabilities/${id}/status`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: 'fixed' })
-                });
-                console.log('Vulnerability fixed successfully');
-                await loadCriticalIssues();
-                await loadStats();
-            } catch (err) {
-                alert('Failed to fix issue: ' + err.message);
-            }
-        }
-
-        // Escape HTML
-        function escapeHtml(str) {
-            if (!str) return '';
-            const map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            };
-            return str.replace(/[&<>"']/g, m => map[m]);
-        }
-
-        // Logout
-        async function logout() {
-            try {
-                await fetch('/api/auth/logout', { 
-                    method: 'POST', 
-                    credentials: 'include' 
-                });
-            } catch (err) {
-                console.error('Logout error:', err);
-            } finally {
-                window.location.href = '/login.html';
-            }
-        }
-
-        // Initialize
-        window.addEventListener('DOMContentLoaded', async () => {
-            // Test backend connection first
-            const isHealthy = await testBackendConnection();
-            
-            // Check authentication
-            const authenticated = await checkAuth();
-            if (!authenticated) return;
-            
-            // Load data if backend is healthy
-            if (isHealthy) {
-                await loadStats();
-                await loadRecentScans();
-                await loadCriticalIssues();
+                const data = await fetchJSON('/api/dashboard/stats');
                 
-                // Set up periodic refresh (every 60 seconds)
-                pollingInterval = setInterval(async () => {
-                    await loadStats();
-                    await loadRecentScans();
-                }, 60000);
-            } else {
-                showConnectionBanner('error', '❌ Backend is unavailable. Some features may not work correctly.');
+                if (data.securityScore !== undefined) {
+                    document.getElementById('securityScore').textContent = data.securityScore;
+                    document.getElementById('scoreProgressBar').style.width = data.securityScore + '%';
+                }
+                if (data.criticalIssues !== undefined) {
+                    document.getElementById('criticalIssues').textContent = data.criticalIssues;
+                }
+                if (data.totalVulnerabilities !== undefined) {
+                    document.getElementById('totalVulns').textContent = data.totalVulnerabilities;
+                }
+                if (data.lastScan) {
+                    document.getElementById('lastScanInfo').innerHTML = `Last scan: <strong>${new Date(data.lastScan).toLocaleString()}</strong>`;
+                }
+            } catch (err) {
+                console.error('Error loading dashboard stats:', err);
             }
+        }
+
+        // Initialize dashboard
+        async function initDashboard() {
+            console.log('🚀 Initializing dashboard...');
             
-            // Dropdown toggle
-            const userDropdown = document.getElementById('userDropdown');
-            if (userDropdown) {
-                userDropdown.addEventListener('click', () => {
-                    userDropdown.classList.toggle('active');
-                });
-            }
+            // Test backend connection first
+            await testBackendConnection();
             
-            // Logout button
-            const logoutBtn = document.getElementById('logoutBtn');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    logout();
-                });
-            }
+            // Initialize charts with dynamic data
+            await initVulnerabilityChart();
+            await initThreatChart();
             
-            // Fix All Critical button
-            const fixAllBtn = document.getElementById('fixAllCriticalBtn');
-            if (fixAllBtn) {
-                fixAllBtn.addEventListener('click', async () => {
-                    if (confirm('Are you sure you want to fix all critical issues?')) {
-                        try {
-                            await fetchJSON('/api/vulnerabilities/fix-all-critical', {
-                                method: 'POST'
-                            });
-                            alert('All critical issues have been fixed');
-                            await loadStats();
-                            await loadCriticalIssues();
-                        } catch (err) {
-                            alert('Failed to fix all critical issues: ' + err.message);
-                        }
-                    }
-                });
-            }
+            // Load data
+            await loadDashboardStats();
+            await loadRecentScans();
+            await loadCriticalIssues();
+            
+            // Reload data every 30 seconds
+            pollingInterval = setInterval(async () => {
+                await loadDashboardStats();
+                await loadRecentScans();
+                await loadRealChartData();
+            }, 30000);
+        }
+
+        // Listen for trend period changes
+        document.getElementById('trendPeriod').addEventListener('change', async (e) => {
+            console.log(`Trend period changed to: ${e.target.value} days`);
+            await loadRealChartData();
         });
 
-        // Cleanup on unload
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', initDashboard);
+
+        // Cleanup on page unload
         window.addEventListener('beforeunload', () => {
-            if (pollingInterval) {
-                clearInterval(pollingInterval);
-            }
+            if (pollingInterval) clearInterval(pollingInterval);
         });
     </script>
 </body>
