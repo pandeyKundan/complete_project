@@ -321,6 +321,51 @@
             color: var(--text-muted);
         }
 
+        /* Connection Status Banner */
+        .connection-banner {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 0.9rem;
+            animation: slideDown 0.3s ease;
+        }
+
+        .connection-banner.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--success);
+        }
+
+        .connection-banner.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--danger);
+        }
+
+        .connection-banner.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: var(--warning);
+        }
+
+        .connection-icon {
+            font-size: 1.2rem;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         /* Stats Grid */
         .stats-grid {
             display: grid;
@@ -764,6 +809,9 @@
 
     <!-- Main Content -->
     <main class="main-content">
+        <!-- Connection Status Banner -->
+        <div id="connectionBanner"></div>
+
         <div class="page-header">
             <h1>Security Dashboard</h1>
             <p>Real-time security monitoring and threat intelligence</p>
@@ -895,15 +943,69 @@
         let vulnerabilityChart, threatChart;
         let pollingInterval = null;
         let currentUserId = null;
+        let backendHealthy = false;
+
+        // Helper: Show connection status banner
+        function showConnectionBanner(status, message) {
+            const banner = document.getElementById('connectionBanner');
+            const classes = {
+                'success': 'success',
+                'error': 'error',
+                'warning': 'warning'
+            };
+            const icons = {
+                'success': 'fa-check-circle',
+                'error': 'fa-exclamation-circle',
+                'warning': 'fa-info-circle'
+            };
+            
+            banner.className = `connection-banner ${classes[status]}`;
+            banner.innerHTML = `
+                <i class="fas ${icons[status]} connection-icon"></i>
+                <span>${message}</span>
+            `;
+        }
+
+        // Helper: Test backend connection
+        async function testBackendConnection() {
+            try {
+                const response = await fetch('/api/health', { 
+                    method: 'GET',
+                    timeout: 5000
+                });
+                if (response.ok) {
+                    console.log('✅ Backend connected');
+                    backendHealthy = true;
+                    showConnectionBanner('success', '✅ Backend connected and operational');
+                    return true;
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (err) {
+                console.error('❌ Backend connection failed:', err);
+                backendHealthy = false;
+                showConnectionBanner('error', `❌ Backend connection failed: ${err.message}`);
+                return false;
+            }
+        }
 
         // Helper: fetch JSON with error handling
         async function fetchJSON(url, options = {}) {
-            const res = await fetch(url, options);
-            if (!res.ok) {
-                const err = await res.json().catch(() => ({ error: 'Request failed' }));
-                throw new Error(err.error || `HTTP ${res.status}`);
+            try {
+                const res = await fetch(url, {
+                    ...options,
+                    credentials: 'include',
+                    timeout: options.timeout || 10000
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({ error: 'Request failed' }));
+                    throw new Error(err.error || `HTTP ${res.status}`);
+                }
+                return res.json();
+            } catch (err) {
+                console.error(`API Error (${url}):`, err);
+                throw err;
             }
-            return res.json();
         }
 
         // Check authentication and load user info
@@ -916,7 +1018,10 @@
                 return true;
             } catch (err) {
                 console.error('Auth error:', err);
-                window.location.href = '/login.html';
+                showConnectionBanner('error', '❌ Authentication failed. Redirecting to login...');
+                setTimeout(() => {
+                    window.location.href = '/login.html';
+                }, 2000);
                 return false;
             }
         }
@@ -940,6 +1045,7 @@
                 return stats;
             } catch (err) {
                 console.error('Failed to load stats:', err);
+                showConnectionBanner('warning', '⚠️ Could not load dashboard statistics');
                 return null;
             }
         }
@@ -963,11 +1069,14 @@
                             const criticalCount = vulns.filter(v => v.severity === 'critical').length;
                             const highCount = vulns.filter(v => v.severity === 'high').length;
                             issuesHtml = `<span class="badge badge-critical">${criticalCount}</span> <span class="badge badge-high">${highCount}</span>`;
-                        } catch(e) { issuesHtml = '--'; }
+                        } catch(e) { 
+                            console.warn('Could not load scan details:', e);
+                            issuesHtml = '--'; 
+                        }
                     }
                     const started = new Date(scan.started_at).toLocaleString();
                     const duration = scan.duration_seconds ? `${scan.duration_seconds}s` : '--';
-                    const statusBadge = scan.status === 'completed' ? '<span class="badge-info" style="padding:0.2rem 0.5rem; border-radius:20px;">Completed</span>' : '<span style="background:rgba(245,158,11,0.2); color:#f59e0b; padding:0.2rem 0.5rem; border-radius:20px;">In Progress</span>';
+                    const statusBadge = scan.status === 'completed' ? '<span class="badge-info" style="padding:0.2rem 0.5rem; border-radius:20px;">Completed</span>' : '<span style="background:rgba(245,158,11,0.2);padding:0.2rem 0.5rem;border-radius:20px;color:#f59e0b;">In Progress</span>';
                     
                     tbody.innerHTML += `
                         <tr>
@@ -1000,206 +1109,149 @@
                     return;
                 }
                 container.innerHTML = '';
-                vulns.forEach(v => {
-                    const issueDiv = document.createElement('div');
-                    issueDiv.className = 'issue-item critical';
-                    issueDiv.innerHTML = `
-                        <div class="issue-icon"><i class="fas fa-exclamation-triangle"></i></div>
-                        <div class="issue-content">
-                            <h4>${escapeHtml(v.title)}</h4>
-                            <p>${escapeHtml(v.description || 'No description')}</p>
-                            <div class="issue-meta">
-                                <span><i class="fas fa-code"></i> ${escapeHtml(v.location || 'Unknown')}</span>
-                                <span><i class="fas fa-calendar"></i> Detected ${new Date(v.created_at).toLocaleString()}</span>
-                                <span><i class="fas fa-user"></i> ${v.severity.toUpperCase()} Risk</span>
+                vulns.forEach(vuln => {
+                    const createdDate = new Date(vuln.created_at).toLocaleString();
+                    const html = `
+                        <div class="issue-item critical">
+                            <div class="issue-icon">
+                                <i class="fas fa-bug"></i>
+                            </div>
+                            <div class="issue-content">
+                                <h4>${escapeHtml(vuln.title)}</h4>
+                                <p>${escapeHtml(vuln.description || 'No description')}</p>
+                                <div class="issue-meta">
+                                    <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(vuln.location || 'Unknown')}</span>
+                                    <span><i class="fas fa-calendar"></i> ${createdDate}</span>
+                                </div>
+                            </div>
+                            <div class="issue-actions">
+                                <button class="btn-outline btn-sm" onclick="viewIssueDetails(${vuln.id})">Details</button>
+                                <button class="btn-danger btn-sm" onclick="fixIssue(${vuln.id})">Fix</button>
                             </div>
                         </div>
-                        <div class="issue-actions">
-                            <button class="btn-outline btn-sm" onclick="fixVulnerability(${v.id})">Fix Now</button>
-                            <button class="btn-outline btn-sm" onclick="ignoreVulnerability(${v.id})">Ignore</button>
-                        </div>
                     `;
-                    container.appendChild(issueDiv);
+                    container.innerHTML += html;
                 });
             } catch (err) {
                 console.error('Failed to load critical issues:', err);
-                document.getElementById('criticalIssuesList').innerHTML = '<div class="issue-item"><div class="issue-content">Error loading issues</div></div>';
+                document.getElementById('criticalIssuesList').innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--text-muted);">Error loading critical issues</div>';
             }
         }
 
-        // Fix vulnerability
-        async function fixVulnerability(id) {
+        // View issue details
+        function viewIssueDetails(id) {
+            window.location.href = `vulnerabilities.html?id=${id}`;
+        }
+
+        // Fix issue
+        async function fixIssue(id) {
             try {
                 await fetchJSON(`/api/vulnerabilities/${id}/status`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ status: 'fixed' })
                 });
-                showAlert('Vulnerability marked as fixed!', 'success');
-                refreshDashboard();
+                console.log('Vulnerability fixed successfully');
+                await loadCriticalIssues();
+                await loadStats();
             } catch (err) {
-                showAlert('Failed to fix: ' + err.message, 'error');
+                alert('Failed to fix issue: ' + err.message);
             }
         }
 
-        async function ignoreVulnerability(id) {
-            try {
-                await fetchJSON(`/api/vulnerabilities/${id}/status`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: 'false_positive' })
-                });
-                showAlert('Vulnerability ignored', 'info');
-                refreshDashboard();
-            } catch (err) {
-                showAlert('Failed to ignore: ' + err.message, 'error');
-            }
-        }
-
-        async function fixAllCritical() {
-            try {
-                const vulns = await fetchJSON('/api/vulnerabilities?severity=critical&status=open');
-                for (const v of vulns) {
-                    await fetchJSON(`/api/vulnerabilities/${v.id}/status`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ status: 'fixed' })
-                    });
-                }
-                showAlert('All critical issues marked as fixed!', 'success');
-                refreshDashboard();
-            } catch (err) {
-                showAlert('Error: ' + err.message, 'error');
-            }
-        }
-
-        // Load trends and update charts
-        async function loadTrends() {
-            try {
-                const trends = await fetchJSON('/api/dashboard/trends');
-                if (vulnerabilityChart) {
-                    vulnerabilityChart.data.datasets[0].data = trends.critical;
-                    vulnerabilityChart.data.datasets[1].data = trends.high;
-                    vulnerabilityChart.data.datasets[2].data = trends.medium;
-                    vulnerabilityChart.update();
-                }
-                // Update threat distribution
-                const vulns = await fetchJSON('/api/vulnerabilities');
-                const severityCounts = { critical:0, high:0, medium:0, low:0 };
-                vulns.forEach(v => { severityCounts[v.severity]++; });
-                if (threatChart) {
-                    threatChart.data.datasets[0].data = [severityCounts.critical, severityCounts.high, severityCounts.medium, severityCounts.low];
-                    threatChart.update();
-                }
-            } catch (err) {
-                console.error('Failed to load trends:', err);
-            }
-        }
-
-        // Initialize charts
-        function initCharts() {
-            const vulnCtx = document.getElementById('vulnerabilityChart').getContext('2d');
-            vulnerabilityChart = new Chart(vulnCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                    datasets: [
-                        { label: 'Critical', data: [0,0,0,0,0,0,0], borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', tension: 0.4, fill: true },
-                        { label: 'High', data: [0,0,0,0,0,0,0], borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', tension: 0.4, fill: true },
-                        { label: 'Medium', data: [0,0,0,0,0,0,0], borderColor: '#eab308', backgroundColor: 'rgba(234,179,8,0.1)', tension: 0.4, fill: true }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { position: 'top', labels: { color: '#a0a8c0' } } },
-                    scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#a0a8c0' } }, x: { ticks: { color: '#a0a8c0' } } }
-                }
-            });
-            
-            const threatCtx = document.getElementById('threatChart').getContext('2d');
-            threatChart = new Chart(threatCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Critical', 'High', 'Medium', 'Low'],
-                    datasets: [{ data: [0,0,0,0], backgroundColor: ['#ef4444', '#f59e0b', '#eab308', '#10b981'] }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { position: 'bottom', labels: { color: '#a0a8c0' } } }
-                }
-            });
-        }
-
-        // Refresh entire dashboard
-        async function refreshDashboard() {
-            await loadStats();
-            await loadRecentScans();
-            await loadCriticalIssues();
-            await loadTrends();
-        }
-
-        // Show alert notification
-        function showAlert(message, type = 'info') {
-            const alert = document.createElement('div');
-            alert.className = 'live-alert';
-            alert.style.background = type === 'success' ? 'rgba(16,185,129,0.95)' : type === 'error' ? 'rgba(239,68,68,0.95)' : 'rgba(42,117,255,0.95)';
-            alert.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i> ${message}`;
-            document.body.appendChild(alert);
-            setTimeout(() => alert.remove(), 4000);
+        // Escape HTML
+        function escapeHtml(str) {
+            if (!str) return '';
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return str.replace(/[&<>"']/g, m => map[m]);
         }
 
         // Logout
         async function logout() {
-            await fetch('/api/auth/logout', { method: 'POST' });
-            window.location.href = '/login.html';
+            try {
+                await fetch('/api/auth/logout', { 
+                    method: 'POST', 
+                    credentials: 'include' 
+                });
+            } catch (err) {
+                console.error('Logout error:', err);
+            } finally {
+                window.location.href = '/login.html';
+            }
         }
 
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]);
-        }
-
-        // Initialize dashboard
+        // Initialize
         window.addEventListener('DOMContentLoaded', async () => {
+            // Test backend connection first
+            const isHealthy = await testBackendConnection();
+            
+            // Check authentication
             const authenticated = await checkAuth();
             if (!authenticated) return;
             
-            initCharts();
-            await refreshDashboard();
-            
-            // Set up auto-refresh every 30 seconds
-            setInterval(refreshDashboard, 30000);
+            // Load data if backend is healthy
+            if (isHealthy) {
+                await loadStats();
+                await loadRecentScans();
+                await loadCriticalIssues();
+                
+                // Set up periodic refresh (every 60 seconds)
+                pollingInterval = setInterval(async () => {
+                    await loadStats();
+                    await loadRecentScans();
+                }, 60000);
+            } else {
+                showConnectionBanner('error', '❌ Backend is unavailable. Some features may not work correctly.');
+            }
             
             // Dropdown toggle
-            document.getElementById('userDropdown').addEventListener('click', (e) => {
-                e.stopPropagation();
-                document.getElementById('userDropdown').classList.toggle('active');
-            });
-            document.addEventListener('click', () => {
-                document.getElementById('userDropdown').classList.remove('active');
-            });
-            
-            document.getElementById('logoutBtn').addEventListener('click', logout);
-            document.getElementById('fixAllCriticalBtn').addEventListener('click', fixAllCritical);
-            document.getElementById('trendPeriod').addEventListener('change', () => loadTrends());
-            
-            // Sidebar toggle for mobile
-            const sidebar = document.getElementById('sidebar');
-            const mobileMenuBtn = document.createElement('button');
-            mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
-            mobileMenuBtn.style.cssText = 'position:fixed; bottom:20px; left:20px; background:var(--primary); border:none; color:white; width:45px; height:45px; border-radius:50%; z-index:100; cursor:pointer; display:none;';
-            document.body.appendChild(mobileMenuBtn);
-            
-            if (window.innerWidth <= 768) {
-                mobileMenuBtn.style.display = 'flex';
-                mobileMenuBtn.addEventListener('click', () => sidebar.classList.toggle('active'));
+            const userDropdown = document.getElementById('userDropdown');
+            if (userDropdown) {
+                userDropdown.addEventListener('click', () => {
+                    userDropdown.classList.toggle('active');
+                });
             }
-            window.addEventListener('resize', () => {
-                if (window.innerWidth <= 768) mobileMenuBtn.style.display = 'flex';
-                else mobileMenuBtn.style.display = 'none';
-            });
+            
+            // Logout button
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    logout();
+                });
+            }
+            
+            // Fix All Critical button
+            const fixAllBtn = document.getElementById('fixAllCriticalBtn');
+            if (fixAllBtn) {
+                fixAllBtn.addEventListener('click', async () => {
+                    if (confirm('Are you sure you want to fix all critical issues?')) {
+                        try {
+                            await fetchJSON('/api/vulnerabilities/fix-all-critical', {
+                                method: 'POST'
+                            });
+                            alert('All critical issues have been fixed');
+                            await loadStats();
+                            await loadCriticalIssues();
+                        } catch (err) {
+                            alert('Failed to fix all critical issues: ' + err.message);
+                        }
+                    }
+                });
+            }
+        });
+
+        // Cleanup on unload
+        window.addEventListener('beforeunload', () => {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+            }
         });
     </script>
 </body>
