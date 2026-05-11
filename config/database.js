@@ -2,7 +2,11 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
 
-const DB_PATH = path.join(__dirname, '../rakshak.db');
+// Use /tmp directory on Render for writable storage
+const DB_PATH = process.env.NODE_ENV === 'production' 
+    ? '/tmp/rakshak.db'
+    : path.join(__dirname, '../rakshak.db');
+
 let db = null;
 
 function initDatabase() {
@@ -10,7 +14,9 @@ function initDatabase() {
         console.log('📁 Initializing database at:', DB_PATH);
         
         const dbDir = path.dirname(DB_PATH);
-        if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
+        if (!fs.existsSync(dbDir)) {
+            fs.mkdirSync(dbDir, { recursive: true });
+        }
         
         db = new sqlite3.Database(DB_PATH, (err) => {
             if (err) {
