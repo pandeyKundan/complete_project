@@ -163,9 +163,49 @@
             width: 100%;
         }
 
-        .auth-buttons {
+        .auth-section {
             display: flex;
             gap: 1rem;
+            align-items: center;
+        }
+
+        .user-info-header {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            background: rgba(42, 117, 255, 0.1);
+            padding: 0.4rem 1rem;
+            border-radius: 40px;
+            border: 1px solid rgba(42, 117, 255, 0.2);
+        }
+
+        .user-avatar-small {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        .user-name-header {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .logout-btn-header {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: color 0.3s;
+        }
+
+        .logout-btn-header:hover {
+            color: var(--danger);
         }
 
         .btn {
@@ -637,6 +677,10 @@
             .hero-visual {
                 display: none;
             }
+            
+            .user-info-header {
+                display: none;
+            }
         }
 
         /* Animations */
@@ -728,9 +772,8 @@
             <li><a href="reports.html">Reports</a></li>
             <li><a href="vulnerabilities.html">Vulnerabilities</a></li>
         </ul>
-        <div class="auth-buttons">
-            <a href="login.html" class="btn btn-outline">Login</a>
-            <a href="register.html" class="btn btn-primary">Get Started</a>
+        <div class="auth-section" id="authSection">
+            <!-- Will be dynamically populated -->
         </div>
     </header>
 
@@ -745,7 +788,7 @@
                 Advanced <span class="gradient-text">Security Analysis</span><br>
                 for <span class="typing-text" id="typingText">Modern Web Apps</span>
             </h1>
-            <p>Rakshak provides comprehensive security scanning, vulnerability detection, and real-time threat protection for your web applications. Protect your digital assets with cutting-edge [...]
+            <p>Rakshak provides comprehensive security scanning, vulnerability detection, and real-time threat protection for your web applications. Protect your digital assets with cutting-edge AI technology.</p>
             <div class="hero-buttons">
                 <a href="scanner.html" class="btn btn-primary btn-large">
                     <i class="fas fa-shield-alt"></i> Start Free Scan
@@ -887,7 +930,7 @@
         <h2>Ready to <span class="gradient-text">Secure</span> Your Applications?</h2>
         <p>Start your free trial today and see why thousands of developers trust Rakshak</p>
         <div class="cta-buttons">
-            <a href="register.html" class="btn btn-primary btn-large">
+            <a href="login.html" class="btn btn-primary btn-large" id="ctaGetStarted">
                 <i class="fas fa-rocket"></i> Start Free Trial
             </a>
             <a href="scanner.html" class="btn btn-outline btn-large">
@@ -950,7 +993,9 @@
     </div>
 
     <script>
-        // Particle Network Animation
+        // ============================================
+        // PARTICLE NETWORK ANIMATION
+        // ============================================
         const canvas = document.getElementById('particleCanvas');
         const ctx = canvas.getContext('2d');
         
@@ -977,7 +1022,6 @@
         
         function animateParticles() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'rgba(42, 117, 255, 0.3)';
             
             for (let i = 0; i < particles.length; i++) {
                 const p = particles[i];
@@ -991,7 +1035,7 @@
                 
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(42, 117, 255, ${0.3 + Math.random() * 0.2})`;
+                ctx.fillStyle = `rgba(42, 117, 255, 0.4)`;
                 ctx.fill();
                 
                 // Draw connections
@@ -999,14 +1043,13 @@
                     const p2 = particles[j];
                     const dx = p.x - p2.x;
                     const dy = p.y - p2.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const dist = Math.sqrt(dx * dx + dy * dy);
                     
-                    if (distance < 150) {
-                        ctx.strokeStyle = `rgba(42, 117, 255, ${0.2 * (1 - distance / 150)})`;
-                        ctx.lineWidth = 0.5;
+                    if (dist < 120) {
                         ctx.beginPath();
                         ctx.moveTo(p.x, p.y);
                         ctx.lineTo(p2.x, p2.y);
+                        ctx.strokeStyle = `rgba(42, 117, 255, ${0.15 * (1 - dist / 120)})`;
                         ctx.stroke();
                     }
                 }
@@ -1017,9 +1060,11 @@
         
         animateParticles();
 
-        // Typing animation
+        // ============================================
+        // TYPING ANIMATION
+        // ============================================
         const typingText = document.getElementById('typingText');
-        const phrases = ['Modern Web Apps', 'Enterprise Systems', 'Cloud Platforms'];
+        const phrases = ['Modern Web Apps', 'Enterprise Systems', 'Cloud Platforms', 'APIs', 'FinTech'];
         let phraseIndex = 0;
         let charIndex = 0;
         let isDeleting = false;
@@ -1035,15 +1080,17 @@
                 charIndex++;
             }
             
-            if (charIndex === currentPhrase.length) {
+            if (!isDeleting && charIndex === currentPhrase.length) {
                 isDeleting = true;
                 setTimeout(typeAnimation, 2000);
                 return;
             }
             
-            if (charIndex === 0) {
+            if (isDeleting && charIndex === 0) {
                 isDeleting = false;
                 phraseIndex = (phraseIndex + 1) % phrases.length;
+                setTimeout(typeAnimation, 100);
+                return;
             }
             
             setTimeout(typeAnimation, isDeleting ? 50 : 100);
@@ -1051,18 +1098,180 @@
         
         typeAnimation();
 
-        // Mobile Menu
+        // ============================================
+        // MOBILE MENU TOGGLE
+        // ============================================
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const navMenu = document.getElementById('navMenu');
         
-        mobileMenuBtn.addEventListener('click', () => {
-            navMenu.classList.toggle('active');
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', () => {
+                navMenu.classList.toggle('active');
+            });
+        }
+
+        // Close mobile menu when clicking a link
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('active');
+            });
         });
 
-        // Check Backend Status
+        // ============================================
+        // AUTHENTICATION & USER STATE
+        // ============================================
+        let currentUser = null;
+
+        async function checkUserSession() {
+            try {
+                const response = await fetch('/api/auth/me', {
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    currentUser = data.user;
+                    updateUIForLoggedInUser();
+                    return true;
+                } else {
+                    updateUIForLoggedOutUser();
+                    return false;
+                }
+            } catch (err) {
+                console.log('Backend offline, showing logged out state');
+                updateUIForLoggedOutUser();
+                return false;
+            }
+        }
+
+        function updateUIForLoggedInUser() {
+            const authSection = document.getElementById('authSection');
+            if (authSection && currentUser) {
+                authSection.innerHTML = `
+                    <div class="user-info-header">
+                        <div class="user-avatar-small">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span class="user-name-header">${currentUser.first_name} ${currentUser.last_name}</span>
+                        <button class="logout-btn-header" onclick="logoutUser()">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function updateUIForLoggedOutUser() {
+            const authSection = document.getElementById('authSection');
+            if (authSection) {
+                authSection.innerHTML = `
+                    <a href="login.html" class="btn btn-outline">Login</a>
+                    <a href="login.html" class="btn btn-primary">Get Started</a>
+                `;
+            }
+        }
+
+        async function logoutUser() {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+                currentUser = null;
+                updateUIForLoggedOutUser();
+                showNotification('Logged out successfully', 'success');
+                setTimeout(() => window.location.reload(), 1000);
+            } catch (err) {
+                console.error('Logout error:', err);
+                showNotification('Logout failed', 'error');
+            }
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                background: ${type === 'success' ? '#10b981' : '#ef4444'};
+                color: white;
+                border-radius: 8px;
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.innerHTML = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // ============================================
+        // STATS COUNTER ANIMATION
+        // ============================================
+        function animateCounter(element, target, suffix = '') {
+            if (!element) return;
+            
+            let current = 0;
+            const duration = 2000;
+            const steps = 60;
+            const increment = target / steps;
+            let step = 0;
+            
+            const timer = setInterval(() => {
+                step++;
+                current += increment;
+                if (step >= steps) {
+                    if (suffix === '%') {
+                        element.textContent = target + suffix;
+                    } else if (suffix === '+') {
+                        element.textContent = target.toLocaleString() + suffix;
+                    } else {
+                        element.textContent = target;
+                    }
+                    clearInterval(timer);
+                } else {
+                    if (suffix === '%') {
+                        element.textContent = Math.floor(current) + suffix;
+                    } else if (suffix === '+') {
+                        element.textContent = Math.floor(current).toLocaleString() + suffix;
+                    } else {
+                        element.textContent = Math.floor(current);
+                    }
+                }
+            }, duration / steps);
+        }
+
+        async function loadHeroStats() {
+            const statWebsites = document.getElementById('statWebsites');
+            const statDetection = document.getElementById('statDetection');
+            const statScans = document.getElementById('statScans');
+            
+            try {
+                const response = await fetch('/api/dashboard/stats', {
+                    credentials: 'include',
+                    signal: AbortSignal.timeout(5000)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    animateCounter(statWebsites, 12500, '+');
+                    animateCounter(statDetection, 99.9, '%');
+                    animateCounter(statScans, (data.totalVulnerabilities || 27) * 20, '+');
+                } else {
+                    throw new Error('Backend error');
+                }
+            } catch (err) {
+                console.log('Using demo stats');
+                animateCounter(statWebsites, 12500, '+');
+                animateCounter(statDetection, 99.9, '%');
+                animateCounter(statScans, 1250, '+');
+            }
+        }
+
+        // ============================================
+        // BACKEND STATUS CHECK
+        // ============================================
         async function checkBackendStatus() {
             try {
-                const response = await fetch('/api/health');
+                const response = await fetch('/api/health', { signal: AbortSignal.timeout(3000) });
                 if (response.ok) {
                     document.getElementById('statusDot').className = 'status-dot';
                     document.getElementById('statusText').innerHTML = 'Backend Online';
@@ -1076,63 +1285,143 @@
             }
         }
 
-        // Call every 30 seconds
-        checkBackendStatus();
-        setInterval(checkBackendStatus, 30000);
+        // ============================================
+        // DASHBOARD STATS (for preview section)
+        // ============================================
+        let trendChart, severityChart;
 
-        // Dashboard Stats
-        function updateDashboardStats() {
-            document.getElementById('liveSecurityScore').textContent = Math.floor(Math.random() * 40) + 60;
-            document.getElementById('liveCriticalIssues').textContent = Math.floor(Math.random() * 15);
-            document.getElementById('liveTotalVulns').textContent = Math.floor(Math.random() * 50) + 10;
-            document.getElementById('liveScansToday').textContent = Math.floor(Math.random() * 1000) + 500;
-            document.getElementById('lastUpdate').textContent = `Last update: ${new Date().toLocaleTimeString()}`;
-        }
-        
-        updateDashboardStats();
-        setInterval(updateDashboardStats, 5000);
-
-        // Chart initialization (sample data)
-        const trendCtx = document.getElementById('trendChart').getContext('2d');
-        const trendChart = new Chart(trendCtx, {
-            type: 'line',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                    label: 'Security Score',
-                    data: [75, 78, 82, 80, 85, 88, 90],
-                    borderColor: 'rgba(42, 117, 255, 1)',
-                    backgroundColor: 'rgba(42, 117, 255, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, max: 100, grid: { color: 'rgba(255,255,255,0.05)' } }
+        async function updateDashboardStats() {
+            try {
+                const response = await fetch('/api/dashboard/stats', { signal: AbortSignal.timeout(5000) });
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('liveSecurityScore').textContent = data.securityScore + '%';
+                    document.getElementById('liveCriticalIssues').textContent = data.criticalIssues;
+                    document.getElementById('liveTotalVulns').textContent = data.totalVulnerabilities;
+                    document.getElementById('liveScansToday').textContent = data.recentScans?.length || 0;
+                    document.getElementById('lastUpdate').textContent = `Last update: ${new Date().toLocaleTimeString()}`;
+                    
+                    // Update charts with real data
+                    const trends = await fetch('/api/dashboard/trends').then(r => r.json());
+                    if (trendChart) {
+                        trendChart.data.datasets[0].data = trends.critical || [2, 3, 1, 4, 3, 2, 3];
+                        trendChart.update();
+                    }
+                } else {
+                    throw new Error('Backend error');
                 }
+            } catch (err) {
+                console.log('Using demo dashboard stats');
+                document.getElementById('liveSecurityScore').textContent = '92%';
+                document.getElementById('liveCriticalIssues').textContent = '3';
+                document.getElementById('liveTotalVulns').textContent = '27';
+                document.getElementById('liveScansToday').textContent = '12';
+                document.getElementById('lastUpdate').textContent = `Last update: ${new Date().toLocaleTimeString()} (Demo)`;
             }
+        }
+
+        // ============================================
+        // CHART INITIALIZATION
+        // ============================================
+        function initCharts() {
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            trendChart = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Vulnerabilities',
+                        data: [12, 9, 15, 8, 10, 6, 4],
+                        borderColor: '#2a75ff',
+                        backgroundColor: 'rgba(42, 117, 255, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#a0a8c0' } },
+                        x: { ticks: { color: '#a0a8c0' } }
+                    }
+                }
+            });
+
+            const severityCtx = document.getElementById('severityChart').getContext('2d');
+            severityChart = new Chart(severityCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Critical', 'High', 'Medium', 'Low'],
+                    datasets: [{
+                        data: [12, 28, 35, 25],
+                        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#a0a8c0' } } }
+                }
+            });
+        }
+
+        // ============================================
+        // COMMAND INPUT HANDLER
+        // ============================================
+        const commandInput = document.getElementById('commandInput');
+        if (commandInput) {
+            commandInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const cmd = e.target.value.toLowerCase();
+                    const commands = {
+                        'help': 'Available: status, scan, report, login, logout, stats, help',
+                        'status': `System Status: ${document.getElementById('statusText').innerHTML} | User: ${currentUser ? currentUser.email : 'Not logged in'}`,
+                        'stats': `Security Score: ${document.getElementById('liveSecurityScore').textContent} | Critical Issues: ${document.getElementById('liveCriticalIssues').textContent}`,
+                        'scan': 'Visit /scanner.html to start a new security scan',
+                        'report': 'Visit /reports.html to view reports',
+                        'login': currentUser ? 'Already logged in' : 'Redirecting to login...',
+                        'logout': currentUser ? 'Logging out...' : 'Not logged in'
+                    };
+                    if (cmd === 'login' && !currentUser) window.location.href = '/login.html';
+                    if (cmd === 'logout' && currentUser) logoutUser();
+                    alert(commands[cmd] || 'Command not recognized. Type "help" for available commands.');
+                    e.target.value = '';
+                }
+            });
+        }
+
+        // ============================================
+        // INTERSECTION OBSERVER FOR ANIMATIONS
+        // ============================================
+        const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in-up');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+        
+        document.querySelectorAll('.feature-card, .dashboard-preview').forEach(el => {
+            observer.observe(el);
         });
 
-        const severityCtx = document.getElementById('severityChart').getContext('2d');
-        const severityChart = new Chart(severityCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Critical', 'High', 'Medium', 'Low'],
-                datasets: [{
-                    data: [12, 28, 35, 25],
-                    backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981']
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { labels: { color: '#fff', font: { size: 12 } } } }
-            }
+        // ============================================
+        // INITIALIZE ALL
+        // ============================================
+        document.addEventListener('DOMContentLoaded', async () => {
+            initCharts();
+            await checkUserSession();
+            loadHeroStats();
+            checkBackendStatus();
+            updateDashboardStats();
+            
+            // Refresh stats periodically
+            setInterval(updateDashboardStats, 30000);
+            setInterval(checkBackendStatus, 30000);
         });
     </script>
 </body>
