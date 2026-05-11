@@ -71,7 +71,13 @@ function createTables() {
       db.run(query, (err) => {
         if (err) reject(err);
         completed++;
-        if (completed === queries.length) resolve();
+        if (completed === queries.length) {
+          // Add indexes for faster queries
+          db.run(`CREATE INDEX IF NOT EXISTS idx_vulns_scan ON vulnerabilities(scan_id)`);
+          db.run(`CREATE INDEX IF NOT EXISTS idx_vulns_severity ON vulnerabilities(severity)`);
+          db.run(`CREATE INDEX IF NOT EXISTS idx_scans_user ON scans(user_id)`);
+          resolve();
+        }
       });
     });
   });
