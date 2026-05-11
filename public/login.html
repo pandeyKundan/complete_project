@@ -697,7 +697,7 @@
                         <input type="checkbox" id="newsletterCheckbox">
                         <label style="font-size: 0.85rem;">Receive security updates and tips</label>
                     </div>
-                    <button class="btn-primary" onclick="handleRegister()">
+                    <button class="btn-primary" onclick="handleRegister(event)">
                         <i class="fas fa-rocket"></i> Start Free Trial
                     </button>
 
@@ -936,42 +936,87 @@
             });
         }
 
-        // Handle Register
-        async function handleRegister() {
-            const firstName = document.getElementById('regFirstName').value;
-            const lastName = document.getElementById('regLastName').value;
-            const email = document.getElementById('regEmail').value;
+        // Handle Register with improved error handling
+        async function handleRegister(event) {
+            const firstName = document.getElementById('regFirstName').value.trim();
+            const lastName = document.getElementById('regLastName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
             const password = document.getElementById('regPassword').value;
             const confirmPassword = document.getElementById('regConfirmPassword').value;
-            const company = document.getElementById('regCompany').value;
+            const company = document.getElementById('regCompany').value.trim();
             const terms = document.getElementById('termsCheckbox').checked;
+            
+            // Validation
             if (!firstName || !lastName || !email || !password) {
-                showNotification('Please fill in all required fields', 'error');
+                showNotification('❌ Please fill in all required fields', 'error');
                 return;
             }
+            
+            if (!email.includes('@') || !email.includes('.')) {
+                showNotification('❌ Please enter a valid email address', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showNotification('❌ Password must be at least 6 characters', 'error');
+                return;
+            }
+            
             if (password !== confirmPassword) {
-                showNotification('Passwords do not match', 'error');
+                showNotification('❌ Passwords do not match', 'error');
                 return;
             }
+            
             if (!terms) {
-                showNotification('Please accept the Terms of Service', 'error');
+                showNotification('❌ Please accept the Terms of Service', 'error');
                 return;
             }
+            
+            // Show loading state
+            const registerBtn = event.target;
+            const originalText = registerBtn.innerHTML;
+            registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
+            registerBtn.disabled = true;
+            
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                
                 const res = await fetch('/api/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ firstName, lastName, email, password, company, plan: selectedPlan })
+                    body: JSON.stringify({ firstName, lastName, email, password, company, plan: selectedPlan }),
+                    signal: controller.signal,
+                    credentials: 'include'
                 });
+                
+                clearTimeout(timeoutId);
                 const data = await res.json();
+                
                 if (res.ok) {
-                    showNotification('Account created successfully! Welcome to Rakshak!', 'success');
-                    setTimeout(() => window.location.href = '/dashboard.html', 1000);
+                    showNotification('✅ Account created successfully! Redirecting to dashboard...', 'success');
+                    sessionStorage.setItem('user', JSON.stringify(data.user));
+                    setTimeout(() => {
+                        window.location.href = '/dashboard.html';
+                    }, 800);
                 } else {
-                    showNotification(data.error || 'Registration failed', 'error');
+                    if (res.status === 409) {
+                        showNotification('❌ Email already registered. Please use a different email or login.', 'error');
+                    } else if (res.status === 400) {
+                        showNotification(data.error || '❌ Invalid registration data', 'error');
+                    } else {
+                        showNotification(data.error || '❌ Registration failed. Please try again.', 'error');
+                    }
                 }
             } catch (err) {
-                showNotification('Network error. Please try again.', 'error');
+                if (err.name === 'AbortError') {
+                    showNotification('⏱️ Request timeout. Please check your connection.', 'error');
+                } else {
+                    showNotification('❌ Network error. Please try again.', 'error');
+                }
+            } finally {
+                registerBtn.innerHTML = originalText;
+                registerBtn.disabled = false;
             }
         }
 
