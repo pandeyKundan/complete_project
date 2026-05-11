@@ -26,10 +26,10 @@ function initDatabase() {
             }
             console.log('✅ SQLite database connected successfully');
             
-            // Create all tables
-            createTables()
+            // Create all tables FIRST, then indexes
+            createTablesAndIndexes()
                 .then(() => {
-                    console.log('✅ All tables created/verified');
+                    console.log('✅ All tables and indexes created/verified');
                     resolve();
                 })
                 .catch(reject);
@@ -38,11 +38,12 @@ function initDatabase() {
 }
 
 /**
- * Create all required tables
+ * Create all required tables AND indexes in correct order
  */
-function createTables() {
-    const queries = [
-        // Users table
+function createTablesAndIndexes() {
+    // Step 1: Create TABLES first (in correct dependency order)
+    const tables = [
+        // Users table (no dependencies)
         `CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT UNIQUE NOT NULL,
@@ -53,7 +54,7 @@ function createTables() {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )`,
         
-        // Scans table
+        // Scans table (depends on users)
         `CREATE TABLE IF NOT EXISTS scans (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
@@ -68,11 +69,7 @@ function createTables() {
             FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
         )`,
         
-        // Index for scans - for faster queries
-        `CREATE INDEX IF NOT EXISTS idx_scans_user_id ON scans(user_id)`,
-        `CREATE INDEX IF NOT EXISTS idx_scans_status ON scans(status)`,
-        
-        // Vulnerabilities table
+        // Vulnerabilities table (depends on scans)
         `CREATE TABLE IF NOT EXISTS vulnerabilities (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             scan_id INTEGER NOT NULL,
@@ -87,12 +84,7 @@ function createTables() {
             FOREIGN KEY(scan_id) REFERENCES scans(id) ON DELETE CASCADE
         )`,
         
-        // Index for vulnerabilities
-        `CREATE INDEX IF NOT EXISTS idx_vulns_scan_id ON vulnerabilities(scan_id)`,
-        `CREATE INDEX IF NOT EXISTS idx_vulns_severity ON vulnerabilities(severity)`,
-        `CREATE INDEX IF NOT EXISTS idx_vulns_status ON vulnerabilities(status)`,
-        
-        // Reports table
+        // Reports table (depends on users)
         `CREATE TABLE IF NOT EXISTS reports (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
@@ -101,27 +93,55 @@ function createTables() {
             content TEXT,
             generated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
-        )`,
-        
-        // Index for reports
+        )`
+    ];
+    
+    // Step 2: Create INDEXES after tables exist
+    const indexes = [
+        `CREATE INDEX IF NOT EXISTS idx_scans_user_id ON scans(user_id)`,
+        `CREATE INDEX IF NOT EXISTS idx_scans_status ON scans(status)`,
+        `CREATE INDEX IF NOT EXISTS idx_scans_started_at ON scans(started_at)`,
+        `CREATE INDEX IF NOT EXISTS idx_vulns_scan_id ON vulnerabilities(scan_id)`,
+        `CREATE INDEX IF NOT EXISTS idx_vulns_severity ON vulnerabilities(severity)`,
+        `CREATE INDEX IF NOT EXISTS idx_vulns_status ON vulnerabilities(status)`,
+        `CREATE INDEX IF NOT EXISTS idx_vulns_created_at ON vulnerabilities(created_at)`,
         `CREATE INDEX IF NOT EXISTS idx_reports_user_id ON reports(user_id)`,
         `CREATE INDEX IF NOT EXISTS idx_reports_generated_at ON reports(generated_at)`
     ];
-
+    
     return new Promise((resolve, reject) => {
-        let completed = 0;
-        const total = queries.length;
+        // First, create all tables
+        let tableCompleted = 0;
         
-        queries.forEach((query, index) => {
+        tables.forEach((query, index) => {
             db.run(query, (err) => {
                 if (err) {
-                    console.error(`❌ Error creating table (query ${index + 1}):`, err.message);
+                    console.error(`❌ Error creating table (${index + 1}):`, err.message);
                     reject(err);
                     return;
                 }
-                completed++;
-                if (completed === total) {
-                    resolve();
+                tableCompleted++;
+                console.log(`✅ Table ${index + 1}/${tables.length} created`);
+                
+                if (tableCompleted === tables.length) {
+                    // All tables created, now create indexes
+                    console.log('📊 Creating indexes...');
+                    let indexCompleted = 0;
+                    
+                    indexes.forEach((query, idx) => {
+                        db.run(query, (err) => {
+                            if (err) {
+                                console.error(`❌ Error creating index (${idx + 1}):`, err.message);
+                                // Don't reject on index errors - they're not critical
+                                console.warn(`⚠️ Index ${idx + 1} failed, continuing...`);
+                            }
+                            indexCompleted++;
+                            if (indexCompleted === indexes.length) {
+                                console.log('✅ All indexes created');
+                                resolve();
+                            }
+                        });
+                    });
                 }
             });
         });
