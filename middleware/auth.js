@@ -1,4 +1,4 @@
-async function isAuthenticated(req, res, next) {
+function isAuthenticated(req, res, next) {
     // Check if user is logged in via session
     if (req.session && req.session.userId) {
         return next();
@@ -13,20 +13,24 @@ async function isAuthenticated(req, res, next) {
     return res.status(401).json({ error: 'Unauthorized: Please login first' });
 }
 
-// Optional: Check if user is admin
+// Optional: Check if user is admin (for future use)
 async function isAdmin(req, res, next) {
     if (!req.session || !req.session.userId) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
     
-    const { getQuery } = require('../config/database');
-    const user = await getQuery('SELECT role FROM users WHERE id = ?', [req.session.userId]);
-    
-    if (user && user.role === 'admin') {
-        return next();
+    try {
+        const { getQuery } = require('../config/database');
+        const user = await getQuery('SELECT role FROM users WHERE id = ?', [req.session.userId]);
+        
+        if (user && user.role === 'admin') {
+            return next();
+        }
+        
+        return res.status(403).json({ error: 'Forbidden: Admin access required' });
+    } catch (err) {
+        return res.status(500).json({ error: 'Server error' });
     }
-    
-    return res.status(403).json({ error: 'Forbidden: Admin access required' });
 }
 
 module.exports = { isAuthenticated, isAdmin };
