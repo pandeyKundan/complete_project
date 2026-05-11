@@ -28,6 +28,18 @@ app.use(session({
 // Serve static files from "public" folder
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ======================================================
+// Health check - MUST be first
+// ======================================================
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
@@ -35,14 +47,9 @@ app.use('/api/vulnerabilities', vulnerabilityRoutes);
 app.use('/api/scans', scanRoutes);
 app.use('/api/reports', reportRoutes);
 
-// ========== FIX: Serve index.html at root path ==========
+// Root route
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // Handle 404 for unknown API routes
