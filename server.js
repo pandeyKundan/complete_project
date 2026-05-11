@@ -1,8 +1,10 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+const FileStore = require('session-file-store')(session);
 const path = require('path');
 const cors = require('cors');
+const fs = require('fs');
 const { initDatabase } = require('./config/database');
 
 // Import routes
@@ -27,12 +29,11 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
 }));
 
-// Session configuration - Use file store for persistence
-const FileStore = require('session-file-store')(session);
+// Session configuration with file store for persistence
 app.use(session({
     store: new FileStore({
         path: './sessions',
-        ttl: 86400,
+        ttl: 86400,  // 24 hours in seconds
         retries: 0
     }),
     secret: process.env.SESSION_SECRET || 'rakshak_secret_key_change_me',
@@ -42,7 +43,7 @@ app.use(session({
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
         sameSite: 'lax',
-        maxAge: 24 * 60 * 60 * 1000
+        maxAge: 24 * 60 * 60 * 1000  // 24 hours
     },
     name: 'rakshak.sid'
 }));
@@ -88,9 +89,9 @@ async function startServer() {
         await initDatabase();
         
         // Ensure sessions directory exists
-        const fs = require('fs');
         if (!fs.existsSync('./sessions')) {
             fs.mkdirSync('./sessions');
+            console.log('📁 Sessions directory created');
         }
         
         app.listen(PORT, () => {
