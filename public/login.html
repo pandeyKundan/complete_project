@@ -581,7 +581,7 @@
                         <input type="checkbox" id="rememberMe">
                         <label style="font-size: 0.85rem;">Remember me</label>
                     </div>
-                    <button class="btn-primary" onclick="handleLogin()">
+                    <button class="btn-primary" onclick="handleLogin(event)">
                         <i class="fas fa-arrow-right-to-bracket"></i> Sign In
                     </button>
 
@@ -841,30 +841,99 @@
             document.querySelector(`.plan-btn[data-plan="${plan}"]`).classList.add('active');
         }
 
-        // Handle Login
-        async function handleLogin() {
-            const email = document.getElementById('loginEmail').value;
+        // Handle Login with improved error handling and retry logic
+        async function handleLogin(event) {
+            const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
+            
+            // Validation
             if (!email || !password) {
-                showNotification('Please fill in all fields', 'error');
+                showNotification('❌ Please fill in all fields', 'error');
                 return;
             }
+            
+            if (!email.includes('@') || !email.includes('.')) {
+                showNotification('❌ Please enter a valid email address', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showNotification('❌ Password must be at least 6 characters', 'error');
+                return;
+            }
+            
+            // Show loading state
+            const loginBtn = event.target;
+            const originalText = loginBtn.innerHTML;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+            loginBtn.disabled = true;
+            
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+                
                 const res = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ email, password }),
+                    signal: controller.signal,
+                    credentials: 'include' // Important for session cookies
                 });
+                
+                clearTimeout(timeoutId);
                 const data = await res.json();
+                
                 if (res.ok) {
-                    showNotification('Login successful! Redirecting...', 'success');
-                    setTimeout(() => window.location.href = '/dashboard.html', 1000);
+                    showNotification('✅ Login successful! Redirecting to dashboard...', 'success');
+                    // Store user info in sessionStorage for quick access
+                    sessionStorage.setItem('user', JSON.stringify(data.user));
+                    setTimeout(() => {
+                        window.location.href = '/dashboard.html';
+                    }, 800);
                 } else {
-                    showNotification(data.error || 'Login failed', 'error');
+                    // Handle specific error cases
+                    if (res.status === 401) {
+                        showNotification('❌ Invalid email or password. Please try again.', 'error');
+                    } else if (res.status === 429) {
+                        showNotification('❌ Too many attempts. Please wait before trying again.', 'error');
+                    } else {
+                        showNotification(data.error || '❌ Login failed. Please try again.', 'error');
+                    }
                 }
             } catch (err) {
-                showNotification('Network error. Please try again.', 'error');
+                if (err.name === 'AbortError') {
+                    showNotification('⏱️ Request timeout. Please check your connection.', 'error');
+                } else if (err.name === 'TypeError') {
+                    showNotification('🔌 Cannot connect to server. Please check if backend is running.', 'error');
+                } else {
+                    console.error('Login error:', err);
+                    showNotification('❌ Network error. Please try again.', 'error');
+                }
+            } finally {
+                // Reset button state
+                loginBtn.innerHTML = originalText;
+                loginBtn.disabled = false;
             }
+        }
+
+        // Remember Me functionality
+        const rememberCheckbox = document.getElementById('rememberMe');
+        if (rememberCheckbox) {
+            // Load saved email if exists
+            const savedEmail = localStorage.getItem('savedEmail');
+            if (savedEmail) {
+                document.getElementById('loginEmail').value = savedEmail;
+                rememberCheckbox.checked = true;
+            }
+            
+            rememberCheckbox.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    const email = document.getElementById('loginEmail').value;
+                    if (email) localStorage.setItem('savedEmail', email);
+                } else {
+                    localStorage.removeItem('savedEmail');
+                }
+            });
         }
 
         // Handle Register
