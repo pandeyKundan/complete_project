@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// CORS for Render
+// CORS
 app.use(cors({
     origin: true,
     credentials: true,
@@ -27,21 +27,27 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
 }));
 
-// Session configuration
+// Session configuration - Use file store for persistence
+const FileStore = require('session-file-store')(session);
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'rakshak_default_secret_change_me',
+    store: new FileStore({
+        path: './sessions',
+        ttl: 86400,
+        retries: 0
+    }),
+    secret: process.env.SESSION_SECRET || 'rakshak_secret_key_change_me',
     resave: false,
     saveUninitialized: false,
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
         sameSite: 'lax',
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        maxAge: 24 * 60 * 60 * 1000
     },
     name: 'rakshak.sid'
 }));
 
-// ========== HEALTH CHECK (CRITICAL) ==========
+// ========== HEALTH CHECK ==========
 app.get('/api/health', (req, res) => {
     res.status(200).json({
         status: 'ok',
@@ -61,8 +67,12 @@ app.use('/api/vulnerabilities', vulnerabilityRoutes);
 app.use('/api/scans', scanRoutes);
 app.use('/api/reports', reportRoutes);
 
-// ========== CATCH-ALL FOR SPA ROUTING ==========
+// ========== SPA CATCH-ALL ==========
 app.get('*', (req, res) => {
+    // Don't interfere with API routes
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ error: 'API endpoint not found' });
+    }
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
@@ -76,9 +86,17 @@ app.use((err, req, res, next) => {
 async function startServer() {
     try {
         await initDatabase();
+        
+        // Ensure sessions directory exists
+        const fs = require('fs');
+        if (!fs.existsSync('./sessions')) {
+            fs.mkdirSync('./sessions');
+        }
+        
         app.listen(PORT, () => {
             console.log(`🚀 Rakshak backend running on port ${PORT}`);
             console.log(`📍 Health check: http://localhost:${PORT}/api/health`);
+            console.log(`📍 Dashboard: http://localhost:${PORT}/dashboard.html`);
         });
     } catch (err) {
         console.error('Failed to start server:', err);
