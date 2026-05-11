@@ -745,7 +745,7 @@
                 Advanced <span class="gradient-text">Security Analysis</span><br>
                 for <span class="typing-text" id="typingText">Modern Web Apps</span>
             </h1>
-            <p>Rakshak provides comprehensive security scanning, vulnerability detection, and real-time threat protection for your web applications. Protect your digital assets with cutting-edge AI technology.</p>
+            <p>Rakshak provides comprehensive security scanning, vulnerability detection, and real-time threat protection for your web applications. Protect your digital assets with cutting-edge [...]
             <div class="hero-buttons">
                 <a href="scanner.html" class="btn btn-primary btn-large">
                     <i class="fas fa-shield-alt"></i> Start Free Scan
@@ -999,13 +999,14 @@
                     const p2 = particles[j];
                     const dx = p.x - p2.x;
                     const dy = p.y - p2.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const distance = Math.sqrt(dx * dx + dy * dy);
                     
-                    if (dist < 100) {
+                    if (distance < 150) {
+                        ctx.strokeStyle = `rgba(42, 117, 255, ${0.2 * (1 - distance / 150)})`;
+                        ctx.lineWidth = 0.5;
                         ctx.beginPath();
                         ctx.moveTo(p.x, p.y);
                         ctx.lineTo(p2.x, p2.y);
-                        ctx.strokeStyle = `rgba(42, 117, 255, ${0.1 * (1 - dist / 100)})`;
                         ctx.stroke();
                     }
                 }
@@ -1015,207 +1016,123 @@
         }
         
         animateParticles();
-        
-        // Typing Animation
-        const words = ['Modern Web Apps', 'APIs', 'Cloud Services', 'E-commerce', 'FinTech'];
-        let wordIndex = 0;
+
+        // Typing animation
+        const typingText = document.getElementById('typingText');
+        const phrases = ['Modern Web Apps', 'Enterprise Systems', 'Cloud Platforms'];
+        let phraseIndex = 0;
         let charIndex = 0;
         let isDeleting = false;
-        const typingElement = document.getElementById('typingText');
         
-        function typeEffect() {
-            const currentWord = words[wordIndex];
+        function typeAnimation() {
+            const currentPhrase = phrases[phraseIndex];
             
             if (isDeleting) {
-                typingElement.textContent = currentWord.substring(0, charIndex - 1);
+                typingText.textContent = currentPhrase.substring(0, charIndex - 1);
                 charIndex--;
             } else {
-                typingElement.textContent = currentWord.substring(0, charIndex + 1);
+                typingText.textContent = currentPhrase.substring(0, charIndex + 1);
                 charIndex++;
             }
             
-            if (!isDeleting && charIndex === currentWord.length) {
+            if (charIndex === currentPhrase.length) {
                 isDeleting = true;
-                setTimeout(typeEffect, 2000);
+                setTimeout(typeAnimation, 2000);
                 return;
             }
             
-            if (isDeleting && charIndex === 0) {
+            if (charIndex === 0) {
                 isDeleting = false;
-                wordIndex = (wordIndex + 1) % words.length;
-                setTimeout(typeEffect, 500);
-                return;
+                phraseIndex = (phraseIndex + 1) % phrases.length;
             }
             
-            setTimeout(typeEffect, isDeleting ? 50 : 100);
+            setTimeout(typeAnimation, isDeleting ? 50 : 100);
         }
         
-        typeEffect();
+        typeAnimation();
+
+        // Mobile Menu
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navMenu = document.getElementById('navMenu');
         
-        // Counter Animation
-        function animateCounter(element, target, suffix = '') {
-            let current = 0;
-            const increment = target / 50;
-            const timer = setInterval(() => {
-                current += increment;
-                if (current >= target) {
-                    element.textContent = target + suffix;
-                    clearInterval(timer);
-                } else {
-                    element.textContent = Math.floor(current) + suffix;
-                }
-            }, 30);
-        }
-        
-        // Load real stats from backend
-        async function loadStats() {
+        mobileMenuBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+
+        // Check Backend Status
+        async function checkBackendStatus() {
             try {
-                const response = await fetch('/api/dashboard/stats');
+                const response = await fetch('/api/health');
                 if (response.ok) {
-                    const data = await response.json();
-                    document.getElementById('liveSecurityScore').textContent = data.securityScore + '%';
-                    document.getElementById('liveCriticalIssues').textContent = data.criticalIssues;
-                    document.getElementById('liveTotalVulns').textContent = data.totalVulnerabilities;
-                    document.getElementById('liveScansToday').textContent = data.recentScans?.length || 0;
-                    document.getElementById('lastUpdate').textContent = `Last update: ${new Date().toLocaleTimeString()}`;
-                    
-                    // Update hero stats
-                    animateCounter(document.getElementById('statWebsites'), 12500, '+');
-                    animateCounter(document.getElementById('statDetection'), 99, '.9%');
-                    animateCounter(document.getElementById('statScans'), data.totalVulnerabilities * 10 || 250, '+');
-                    
-                    // Update status indicator
                     document.getElementById('statusDot').className = 'status-dot';
-                    document.getElementById('statusText').textContent = 'Backend connected';
+                    document.getElementById('statusText').innerHTML = 'Backend Online';
+                    document.getElementById('liveStatus').style.borderColor = 'rgba(16, 185, 129, 0.3)';
                 } else {
-                    throw new Error('Backend not responding');
+                    throw new Error('Backend unavailable');
                 }
             } catch (err) {
                 document.getElementById('statusDot').className = 'status-dot offline';
-                document.getElementById('statusText').textContent = 'Backend offline (demo mode)';
-                // Fallback to demo stats
-                document.getElementById('liveSecurityScore').textContent = '98%';
-                document.getElementById('liveCriticalIssues').textContent = '3';
-                document.getElementById('liveTotalVulns').textContent = '27';
-                document.getElementById('liveScansToday').textContent = '12';
-                animateCounter(document.getElementById('statWebsites'), 10000, '+');
-                animateCounter(document.getElementById('statDetection'), 99, '.9%');
-                animateCounter(document.getElementById('statScans'), 500, '+');
+                document.getElementById('statusText').innerHTML = 'Backend Offline (Demo Mode)';
             }
         }
-        
-        // Initialize charts
-        let trendChart, severityChart;
-        
-        function initCharts() {
-            const trendCtx = document.getElementById('trendChart').getContext('2d');
-            trendChart = new Chart(trendCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                    datasets: [{
-                        label: 'Vulnerabilities',
-                        data: [12, 9, 15, 8, 10, 6, 4],
-                        borderColor: '#2a75ff',
-                        backgroundColor: 'rgba(42, 117, 255, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { labels: { color: '#a0a8c0' } }
-                    },
-                    scales: {
-                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#a0a8c0' } },
-                        x: { ticks: { color: '#a0a8c0' } }
-                    }
-                }
-            });
-            
-            const severityCtx = document.getElementById('severityChart').getContext('2d');
-            severityChart = new Chart(severityCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Critical', 'High', 'Medium', 'Low'],
-                    datasets: [{
-                        data: [3, 8, 12, 4],
-                        backgroundColor: ['#ef4444', '#f59e0b', '#eab308', '#10b981']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { color: '#a0a8c0' } }
-                    }
-                }
-            });
+
+        // Call every 30 seconds
+        checkBackendStatus();
+        setInterval(checkBackendStatus, 30000);
+
+        // Dashboard Stats
+        function updateDashboardStats() {
+            document.getElementById('liveSecurityScore').textContent = Math.floor(Math.random() * 40) + 60;
+            document.getElementById('liveCriticalIssues').textContent = Math.floor(Math.random() * 15);
+            document.getElementById('liveTotalVulns').textContent = Math.floor(Math.random() * 50) + 10;
+            document.getElementById('liveScansToday').textContent = Math.floor(Math.random() * 1000) + 500;
+            document.getElementById('lastUpdate').textContent = `Last update: ${new Date().toLocaleTimeString()}`;
         }
         
-        // Update charts with real data
-        async function updateCharts() {
-            try {
-                const response = await fetch('/api/dashboard/trends');
-                if (response.ok) {
-                    const trends = await response.json();
-                    if (trendChart) {
-                        trendChart.data.datasets[0].data = trends.critical || [2, 3, 1, 4, 3, 2, 3];
-                        trendChart.update();
-                    }
+        updateDashboardStats();
+        setInterval(updateDashboardStats, 5000);
+
+        // Chart initialization (sample data)
+        const trendCtx = document.getElementById('trendChart').getContext('2d');
+        const trendChart = new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Security Score',
+                    data: [75, 78, 82, 80, 85, 88, 90],
+                    borderColor: 'rgba(42, 117, 255, 1)',
+                    backgroundColor: 'rgba(42, 117, 255, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, max: 100, grid: { color: 'rgba(255,255,255,0.05)' } }
                 }
-            } catch (err) {
-                console.log('Using demo chart data');
-            }
-        }
-        
-        // Mobile menu toggle
-        document.getElementById('mobileMenuBtn').addEventListener('click', () => {
-            document.getElementById('navMenu').classList.toggle('active');
-        });
-        
-        // Command input handler
-        document.getElementById('commandInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                const cmd = e.target.value.toLowerCase();
-                const commands = {
-                    'help': 'Available: status, scan, report, login, help',
-                    'status': 'System: ONLINE | Security: ACTIVE | Last scan: ' + new Date().toLocaleTimeString(),
-                    'scan': 'Visit /scanner.html to start a new security scan',
-                    'report': 'Visit /reports.html to view reports',
-                    'login': 'Go to /login.html to access your account'
-                };
-                alert(commands[cmd] || 'Command not recognized. Type "help" for available commands.');
-                e.target.value = '';
             }
         });
-        
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            initCharts();
-            loadStats();
-            updateCharts();
-            
-            // Refresh stats every 30 seconds
-            setInterval(loadStats, 30000);
-            setInterval(updateCharts, 30000);
-        });
-        
-        // Intersection Observer for animations
-        const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('fade-in-up');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, observerOptions);
-        
-        document.querySelectorAll('.feature-card, .dashboard-preview').forEach(el => {
-            observer.observe(el);
+
+        const severityCtx = document.getElementById('severityChart').getContext('2d');
+        const severityChart = new Chart(severityCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Critical', 'High', 'Medium', 'Low'],
+                datasets: [{
+                    data: [12, 28, 35, 25],
+                    backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { labels: { color: '#fff', font: { size: 12 } } } }
+            }
         });
     </script>
 </body>
