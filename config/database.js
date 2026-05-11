@@ -20,7 +20,6 @@ function initDatabase() {
             }
             console.log('✅ SQLite database connected');
             
-            // Run all CREATE statements in a single transaction
             db.serialize(() => {
                 // Users table
                 db.run(`CREATE TABLE IF NOT EXISTS users (
@@ -73,10 +72,11 @@ function initDatabase() {
                     FOREIGN KEY(user_id) REFERENCES users(id)
                 )`);
                 
-                // Now create indexes (after tables exist)
+                // Indexes
                 db.run(`CREATE INDEX IF NOT EXISTS idx_scans_user_id ON scans(user_id)`);
                 db.run(`CREATE INDEX IF NOT EXISTS idx_vulns_scan_id ON vulnerabilities(scan_id)`);
                 db.run(`CREATE INDEX IF NOT EXISTS idx_vulns_severity ON vulnerabilities(severity)`);
+                db.run(`CREATE INDEX IF NOT EXISTS idx_scans_status ON scans(status)`);
                 
                 console.log('✅ All tables and indexes created');
                 resolve();
@@ -86,6 +86,58 @@ function initDatabase() {
 }
 
 function getDb() { return db; }
-function closeDatabase() { if (db) db.close(); }
 
-module.exports = { initDatabase, getDb, closeDatabase };
+// Helper function for SELECT queries returning single row
+function getQuery(sql, params = []) {
+    return new Promise((resolve, reject) => {
+        if (!db) {
+            reject(new Error('Database not initialized'));
+            return;
+        }
+        db.get(sql, params, (err, row) => {
+            if (err) reject(err);
+            else resolve(row);
+        });
+    });
+}
+
+// Helper function for SELECT queries returning multiple rows
+function allQuery(sql, params = []) {
+    return new Promise((resolve, reject) => {
+        if (!db) {
+            reject(new Error('Database not initialized'));
+            return;
+        }
+        db.all(sql, params, (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
+}
+
+// Helper function for INSERT/UPDATE/DELETE queries
+function runQuery(sql, params = []) {
+    return new Promise((resolve, reject) => {
+        if (!db) {
+            reject(new Error('Database not initialized'));
+            return;
+        }
+        db.run(sql, params, function(err) {
+            if (err) reject(err);
+            else resolve({ lastID: this.lastID, changes: this.changes });
+        });
+    });
+}
+
+function closeDatabase() { 
+    if (db) db.close(); 
+}
+
+module.exports = { 
+    initDatabase, 
+    getDb, 
+    getQuery, 
+    allQuery, 
+    runQuery, 
+    closeDatabase 
+};
