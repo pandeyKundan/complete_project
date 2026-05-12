@@ -8,18 +8,16 @@ const { initDatabase } = require('./config/database');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({ origin: true, credentials: true }));
 
-// Session configuration - FIXED
 app.use(session({
     secret: process.env.SESSION_SECRET || 'rakshak_secret_key_change_this',
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false,  // Important for Render HTTP
+        secure: false,
         httpOnly: true,
         sameSite: 'lax',
         maxAge: 24 * 60 * 60 * 1000
@@ -27,15 +25,12 @@ app.use(session({
     name: 'rakshak_session'
 }));
 
-// Health check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Routes
 const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
 const vulnerabilityRoutes = require('./routes/vulnerabilities');
@@ -48,22 +43,18 @@ app.use('/api/vulnerabilities', vulnerabilityRoutes);
 app.use('/api/scans', scanRoutes);
 app.use('/api/reports', reportRoutes);
 
-// Catch all
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Error handler
 app.use((err, req, res, next) => {
     console.error('Server error:', err);
     res.status(500).json({ error: 'Internal server error' });
 });
 
-// Start server
 initDatabase().then(() => {
     app.listen(PORT, () => {
         console.log(`🚀 Server running on port ${PORT}`);
-        console.log(`📍 Health check: http://localhost:${PORT}/api/health`);
     });
 }).catch(err => {
     console.error('Failed to start server:', err);
