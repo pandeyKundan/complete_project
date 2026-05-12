@@ -1,14 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const { getDb } = require('../config/database');
+const { getDb, runQuery, getQuery } = require('../config/database');
 
-// REGISTER - Working version
 router.post('/register', async (req, res) => {
     try {
         const { email, password, firstName, lastName, company } = req.body;
-        
-        console.log('Register attempt:', { email, firstName, lastName });
         
         if (!email || !password || !firstName || !lastName) {
             return res.status(400).json({ error: 'Missing required fields' });
@@ -16,55 +13,35 @@ router.post('/register', async (req, res) => {
         
         const db = getDb();
         
-        // Check if user exists
-        const existingUser = await new Promise((resolve, reject) => {
-            db.get('SELECT id FROM users WHERE email = ?', [email.toLowerCase()], (err, row) => {
-                if (err) reject(err);
-                else resolve(row);
-            });
-        });
+        const existingUser = await getQuery('SELECT id FROM users WHERE email = ?', [email.toLowerCase()]);
         
         if (existingUser) {
             return res.status(409).json({ error: 'Email already registered' });
         }
         
-        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
         
-        // Create user
-        const result = await new Promise((resolve, reject) => {
-            db.run(
-                'INSERT INTO users (email, password, first_name, last_name, company) VALUES (?, ?, ?, ?, ?)',
-                [email.toLowerCase(), hashedPassword, firstName, lastName, company || null],
-                function(err) {
-                    if (err) reject(err);
-                    else resolve({ id: this.lastID });
-                }
-            );
-        });
+        const result = await runQuery(
+            'INSERT INTO users (email, password, first_name, last_name, company) VALUES (?, ?, ?, ?, ?)',
+            [email.toLowerCase(), hashedPassword, firstName, lastName, company || null]
+        );
         
-        // Set session
-        req.session.userId = result.id;
-        
-        console.log('User registered successfully:', email);
+        req.session.userId = result.lastID;
         
         res.status(201).json({
             success: true,
-            user: { id: result.id, email, firstName, lastName }
+            user: { id: result.lastID, email, firstName, lastName }
         });
         
     } catch (err) {
         console.error('Registration error:', err);
-        res.status(500).json({ error: 'Registration failed: ' + err.message });
+        res.status(500).json({ error: 'Registration failed' });
     }
 });
 
-// LOGIN - Working version
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        
-        console.log('Login attempt:', email);
         
         if (!email || !password) {
             return res.status(400).json({ error: 'Email and password required' });
@@ -72,12 +49,7 @@ router.post('/login', async (req, res) => {
         
         const db = getDb();
         
-        const user = await new Promise((resolve, reject) => {
-            db.get('SELECT * FROM users WHERE email = ?', [email.toLowerCase()], (err, row) => {
-                if (err) reject(err);
-                else resolve(row);
-            });
-        });
+        const user = await getQuery('SELECT * FROM users WHERE email = ?', [email.toLowerCase()]);
         
         if (!user) {
             return res.status(401).json({ error: 'Invalid credentials' });
@@ -89,8 +61,6 @@ router.post('/login', async (req, res) => {
         }
         
         req.session.userId = user.id;
-        
-        console.log('Login successful:', email);
         
         res.json({
             success: true,
@@ -104,11 +74,10 @@ router.post('/login', async (req, res) => {
         
     } catch (err) {
         console.error('Login error:', err);
-        res.status(500).json({ error: 'Login failed: ' + err.message });
+        res.status(500).json({ error: 'Login failed' });
     }
 });
 
-// GET CURRENT USER
 router.get('/me', async (req, res) => {
     try {
         if (!req.session || !req.session.userId) {
@@ -117,16 +86,10 @@ router.get('/me', async (req, res) => {
         
         const db = getDb();
         
-        const user = await new Promise((resolve, reject) => {
-            db.get(
-                'SELECT id, email, first_name, last_name, company, created_at FROM users WHERE id = ?',
-                [req.session.userId],
-                (err, row) => {
-                    if (err) reject(err);
-                    else resolve(row);
-                }
-            );
-        });
+        const user = await getQuery(
+            'SELECT id, email, first_name, last_name, company, created_at FROM users WHERE id = ?',
+            [req.session.userId]
+        );
         
         if (!user) {
             req.session.destroy();
@@ -150,11 +113,9 @@ router.get('/me', async (req, res) => {
     }
 });
 
-// LOGOUT
 router.post('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
-            console.error('Logout error:', err);
             return res.status(500).json({ error: 'Logout failed' });
         }
         res.json({ success: true });
