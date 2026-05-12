@@ -1,90 +1,70 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const { getDb, runQuery, getQuery } = require('../config/database');
+const { getDb } = require('../config/database');
 
-const SALT_ROUNDS = 10;
-
-/**
- * @route   POST /api/auth/register
- * @desc    Register a new user
- * @access  Public
- */
+// REGISTER - Working version
 router.post('/register', async (req, res) => {
     try {
         const { email, password, firstName, lastName, company } = req.body;
         
-        // Validation
+        console.log('Register attempt:', { email, firstName, lastName });
+        
         if (!email || !password || !firstName || !lastName) {
-            return res.status(400).json({ 
-                error: 'Missing required fields',
-                required: ['email', 'password', 'firstName', 'lastName']
-            });
-        }
-        
-        // Email format validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({ error: 'Invalid email format' });
-        }
-        
-        // Password strength validation
-        if (password.length < 6) {
-            return res.status(400).json({ error: 'Password must be at least 6 characters' });
+            return res.status(400).json({ error: 'Missing required fields' });
         }
         
         const db = getDb();
         
-        // Check if user already exists
-        const existingUser = await getQuery(
-            'SELECT id FROM users WHERE email = ?',
-            [email.toLowerCase()]
-        );
+        // Check if user exists
+        const existingUser = await new Promise((resolve, reject) => {
+            db.get('SELECT id FROM users WHERE email = ?', [email.toLowerCase()], (err, row) => {
+                if (err) reject(err);
+                else resolve(row);
+            });
+        });
         
         if (existingUser) {
             return res.status(409).json({ error: 'Email already registered' });
         }
         
         // Hash password
-        const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+        const hashedPassword = await bcrypt.hash(password, 10);
         
         // Create user
-        const result = await runQuery(
-            `INSERT INTO users (email, password, first_name, last_name, company) 
-             VALUES (?, ?, ?, ?, ?)`,
-            [email.toLowerCase(), hashedPassword, firstName, lastName, company || null]
-        );
+        const result = await new Promise((resolve, reject) => {
+            db.run(
+                'INSERT INTO users (email, password, first_name, last_name, company) VALUES (?, ?, ?, ?, ?)',
+                [email.toLowerCase(), hashedPassword, firstName, lastName, company || null],
+                function(err) {
+                    if (err) reject(err);
+                    else resolve({ id: this.lastID });
+                }
+            );
+        });
         
         // Set session
-        req.session.userId = result.lastID;
+        req.session.userId = result.id;
         
-        // Return user info (excluding password)
+        console.log('User registered successfully:', email);
+        
         res.status(201).json({
             success: true,
-            message: 'User registered successfully',
-            user: {
-                id: result.lastID,
-                email: email.toLowerCase(),
-                firstName,
-                lastName,
-                company: company || null
-            }
+            user: { id: result.id, email, firstName, lastName }
         });
         
     } catch (err) {
-        console.error('❌ Registration error:', err);
-        res.status(500).json({ error: 'Registration failed. Please try again.' });
+        console.error('Registration error:', err);
+        res.status(500).json({ error: 'Registration failed: ' + err.message });
     }
 });
 
-/**
- * @route   POST /api/auth/login
- * @desc    Login user
- * @access  Public
- */
+// LOGIN - Working version
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
+        
+        console.log('Login attempt:', email);
         
         if (!email || !password) {
             return res.status(400).json({ error: 'Email and password required' });
@@ -92,63 +72,61 @@ router.post('/login', async (req, res) => {
         
         const db = getDb();
         
-        // Find user by email
-        const user = await getQuery(
-            'SELECT * FROM users WHERE email = ?',
-            [email.toLowerCase()]
-        );
+        const user = await new Promise((resolve, reject) => {
+            db.get('SELECT * FROM users WHERE email = ?', [email.toLowerCase()], (err, row) => {
+                if (err) reject(err);
+                else resolve(row);
+            });
+        });
         
         if (!user) {
-            return res.status(401).json({ error: 'Invalid email or password' });
+            return res.status(401).json({ error: 'Invalid credentials' });
         }
         
-        // Verify password
-        const isValidPassword = await bcrypt.compare(password, user.password);
-        if (!isValidPassword) {
-            return res.status(401).json({ error: 'Invalid email or password' });
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) {
+            return res.status(401).json({ error: 'Invalid credentials' });
         }
         
-        // Set session
         req.session.userId = user.id;
         
-        // Update last login time (optional - add column if needed)
-        // await runQuery('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [user.id]);
+        console.log('Login successful:', email);
         
         res.json({
             success: true,
-            message: 'Login successful',
             user: {
                 id: user.id,
                 email: user.email,
                 firstName: user.first_name,
-                lastName: user.last_name,
-                company: user.company,
-                createdAt: user.created_at
+                lastName: user.last_name
             }
         });
         
     } catch (err) {
-        console.error('❌ Login error:', err);
-        res.status(500).json({ error: 'Login failed. Please try again.' });
+        console.error('Login error:', err);
+        res.status(500).json({ error: 'Login failed: ' + err.message });
     }
 });
 
-/**
- * @route   GET /api/auth/me
- * @desc    Get current authenticated user
- * @access  Private
- */
+// GET CURRENT USER
 router.get('/me', async (req, res) => {
     try {
-        if (!req.session.userId) {
+        if (!req.session || !req.session.userId) {
             return res.status(401).json({ error: 'Not authenticated' });
         }
         
-        const user = await getQuery(
-            `SELECT id, email, first_name, last_name, company, created_at 
-             FROM users WHERE id = ?`,
-            [req.session.userId]
-        );
+        const db = getDb();
+        
+        const user = await new Promise((resolve, reject) => {
+            db.get(
+                'SELECT id, email, first_name, last_name, company, created_at FROM users WHERE id = ?',
+                [req.session.userId],
+                (err, row) => {
+                    if (err) reject(err);
+                    else resolve(row);
+                }
+            );
+        });
         
         if (!user) {
             req.session.destroy();
@@ -167,74 +145,20 @@ router.get('/me', async (req, res) => {
         });
         
     } catch (err) {
-        console.error('❌ Me endpoint error:', err);
+        console.error('Me error:', err);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-/**
- * @route   POST /api/auth/logout
- * @desc    Logout user
- * @access  Private
- */
+// LOGOUT
 router.post('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
-            console.error('❌ Logout error:', err);
+            console.error('Logout error:', err);
             return res.status(500).json({ error: 'Logout failed' });
         }
-        res.json({ success: true, message: 'Logged out successfully' });
+        res.json({ success: true });
     });
-});
-
-/**
- * @route   POST /api/auth/change-password
- * @desc    Change user password
- * @access  Private
- */
-router.post('/change-password', async (req, res) => {
-    try {
-        if (!req.session.userId) {
-            return res.status(401).json({ error: 'Not authenticated' });
-        }
-        
-        const { currentPassword, newPassword } = req.body;
-        
-        if (!currentPassword || !newPassword) {
-            return res.status(400).json({ error: 'Current password and new password required' });
-        }
-        
-        if (newPassword.length < 6) {
-            return res.status(400).json({ error: 'New password must be at least 6 characters' });
-        }
-        
-        const user = await getQuery(
-            'SELECT password FROM users WHERE id = ?',
-            [req.session.userId]
-        );
-        
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-        
-        const isValid = await bcrypt.compare(currentPassword, user.password);
-        if (!isValid) {
-            return res.status(401).json({ error: 'Current password is incorrect' });
-        }
-        
-        const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
-        
-        await runQuery(
-            'UPDATE users SET password = ? WHERE id = ?',
-            [hashedPassword, req.session.userId]
-        );
-        
-        res.json({ success: true, message: 'Password changed successfully' });
-        
-    } catch (err) {
-        console.error('❌ Change password error:', err);
-        res.status(500).json({ error: 'Failed to change password' });
-    }
 });
 
 module.exports = router;
