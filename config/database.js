@@ -2,35 +2,23 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
 
-// Railway ke liye persistent path
-let DB_PATH;
-if (process.env.RAILWAY_VOLUME_MOUNT_PATH) {
-    DB_PATH = path.join(process.env.RAILWAY_VOLUME_MOUNT_PATH, 'rakshak.db');
-} else if (process.env.NODE_ENV === 'production') {
-    DB_PATH = '/tmp/rakshak.db';
-} else {
-    DB_PATH = path.join(__dirname, '../rakshak.db');
-}
-
-console.log('📁 Database path:', DB_PATH);
-
+const DB_PATH = path.join(__dirname, '../rakshak.db');
 let db = null;
 
 function initDatabase() {
     return new Promise((resolve, reject) => {
+        console.log('📁 Initializing database at:', DB_PATH);
+        
         const dbDir = path.dirname(DB_PATH);
-        if (!fs.existsSync(dbDir)) {
-            fs.mkdirSync(dbDir, { recursive: true });
-            console.log('📁 Created directory:', dbDir);
-        }
+        if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
         
         db = new sqlite3.Database(DB_PATH, (err) => {
             if (err) {
-                console.error('❌ Database connection error:', err);
+                console.error('❌ Database error:', err.message);
                 reject(err);
                 return;
             }
-            console.log('✅ SQLite database connected at:', DB_PATH);
+            console.log('✅ Database connected');
             
             db.serialize(() => {
                 // Users table
@@ -42,10 +30,7 @@ function initDatabase() {
                     last_name TEXT NOT NULL,
                     company TEXT,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                )`, (err) => {
-                    if (err) console.error('Users table error:', err);
-                    else console.log('✅ Users table ready');
-                });
+                )`);
                 
                 // Scans table
                 db.run(`CREATE TABLE IF NOT EXISTS scans (
@@ -60,12 +45,9 @@ function initDatabase() {
                     duration_seconds INTEGER,
                     security_score INTEGER,
                     FOREIGN KEY(user_id) REFERENCES users(id)
-                )`, (err) => {
-                    if (err) console.error('Scans table error:', err);
-                    else console.log('✅ Scans table ready');
-                });
+                )`);
                 
-                // Vulnerabilities table
+                // Vulnerabilities table (100+ types supported)
                 db.run(`CREATE TABLE IF NOT EXISTS vulnerabilities (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     scan_id INTEGER NOT NULL,
@@ -74,13 +56,12 @@ function initDatabase() {
                     severity TEXT CHECK(severity IN ('critical','high','medium','low')),
                     location TEXT,
                     remediation TEXT,
+                    cvss_score REAL,
+                    cwe_id TEXT,
                     status TEXT DEFAULT 'open',
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY(scan_id) REFERENCES scans(id)
-                )`, (err) => {
-                    if (err) console.error('Vulnerabilities table error:', err);
-                    else console.log('✅ Vulnerabilities table ready');
-                });
+                )`);
                 
                 // Reports table
                 db.run(`CREATE TABLE IF NOT EXISTS reports (
@@ -91,17 +72,14 @@ function initDatabase() {
                     content TEXT,
                     generated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY(user_id) REFERENCES users(id)
-                )`, (err) => {
-                    if (err) console.error('Reports table error:', err);
-                    else console.log('✅ Reports table ready');
-                });
+                )`);
                 
                 // Indexes
-                db.run(`CREATE INDEX IF NOT EXISTS idx_scans_user_id ON scans(user_id)`);
-                db.run(`CREATE INDEX IF NOT EXISTS idx_vulns_scan_id ON vulnerabilities(scan_id)`);
+                db.run(`CREATE INDEX IF NOT EXISTS idx_scans_user ON scans(user_id)`);
+                db.run(`CREATE INDEX IF NOT EXISTS idx_vulns_scan ON vulnerabilities(scan_id)`);
                 db.run(`CREATE INDEX IF NOT EXISTS idx_vulns_severity ON vulnerabilities(severity)`);
                 
-                console.log('✅ All tables and indexes created');
+                console.log('✅ All tables created');
                 resolve();
             });
         });
@@ -109,55 +87,4 @@ function initDatabase() {
 }
 
 function getDb() { return db; }
-
-function getQuery(sql, params = []) {
-    return new Promise((resolve, reject) => {
-        if (!db) {
-            reject(new Error('Database not initialized'));
-            return;
-        }
-        db.get(sql, params, (err, row) => {
-            if (err) reject(err);
-            else resolve(row);
-        });
-    });
-}
-
-function allQuery(sql, params = []) {
-    return new Promise((resolve, reject) => {
-        if (!db) {
-            reject(new Error('Database not initialized'));
-            return;
-        }
-        db.all(sql, params, (err, rows) => {
-            if (err) reject(err);
-            else resolve(rows);
-        });
-    });
-}
-
-function runQuery(sql, params = []) {
-    return new Promise((resolve, reject) => {
-        if (!db) {
-            reject(new Error('Database not initialized'));
-            return;
-        }
-        db.run(sql, params, function(err) {
-            if (err) reject(err);
-            else resolve({ lastID: this.lastID, changes: this.changes });
-        });
-    });
-}
-
-function closeDatabase() { 
-    if (db) db.close(); 
-}
-
-module.exports = { 
-    initDatabase, 
-    getDb, 
-    getQuery, 
-    allQuery, 
-    runQuery, 
-    closeDatabase 
-};
+module.exports = { initDatabase, getDb };
