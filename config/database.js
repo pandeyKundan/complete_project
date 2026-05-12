@@ -22,7 +22,6 @@ function initDatabase() {
             }
             console.log('✅ Database connected');
             
-            // Create tables sequentially
             db.serialize(() => {
                 db.run(`CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,10 +31,7 @@ function initDatabase() {
                     last_name TEXT NOT NULL,
                     company TEXT,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                )`, (err) => {
-                    if (err) console.error('Users table error:', err.message);
-                    else console.log('✅ Users table ready');
-                });
+                )`);
                 
                 db.run(`CREATE TABLE IF NOT EXISTS scans (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -49,10 +45,7 @@ function initDatabase() {
                     duration_seconds INTEGER,
                     security_score INTEGER,
                     FOREIGN KEY(user_id) REFERENCES users(id)
-                )`, (err) => {
-                    if (err) console.error('Scans table error:', err.message);
-                    else console.log('✅ Scans table ready');
-                });
+                )`);
                 
                 db.run(`CREATE TABLE IF NOT EXISTS vulnerabilities (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -65,10 +58,7 @@ function initDatabase() {
                     status TEXT DEFAULT 'open',
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY(scan_id) REFERENCES scans(id)
-                )`, (err) => {
-                    if (err) console.error('Vulnerabilities table error:', err.message);
-                    else console.log('✅ Vulnerabilities table ready');
-                });
+                )`);
                 
                 db.run(`CREATE TABLE IF NOT EXISTS reports (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -78,10 +68,9 @@ function initDatabase() {
                     content TEXT,
                     generated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY(user_id) REFERENCES users(id)
-                )`, (err) => {
-                    if (err) console.error('Reports table error:', err.message);
-                    else console.log('✅ Reports table ready');
-                });
+                )`);
+                
+                console.log('✅ All tables ready');
             });
             
             resolve();
@@ -96,4 +85,37 @@ function getDb() {
     return db;
 }
 
-module.exports = { initDatabase, getDb };
+function runQuery(sql, params = []) {
+    return new Promise((resolve, reject) => {
+        db.run(sql, params, function(err) {
+            if (err) reject(err);
+            else resolve({ lastID: this.lastID, changes: this.changes });
+        });
+    });
+}
+
+function getQuery(sql, params = []) {
+    return new Promise((resolve, reject) => {
+        db.get(sql, params, (err, row) => {
+            if (err) reject(err);
+            else resolve(row);
+        });
+    });
+}
+
+function allQuery(sql, params = []) {
+    return new Promise((resolve, reject) => {
+        db.all(sql, params, (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
+}
+
+module.exports = { 
+    initDatabase, 
+    getDb, 
+    runQuery, 
+    getQuery, 
+    allQuery
+};
