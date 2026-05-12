@@ -10,7 +10,9 @@ function initDatabase() {
         console.log('📁 Initializing database at:', DB_PATH);
         
         const dbDir = path.dirname(DB_PATH);
-        if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
+        if (!fs.existsSync(dbDir)) {
+            fs.mkdirSync(dbDir, { recursive: true });
+        }
         
         db = new sqlite3.Database(DB_PATH, (err) => {
             if (err) {
@@ -20,8 +22,8 @@ function initDatabase() {
             }
             console.log('✅ Database connected');
             
+            // Create tables sequentially
             db.serialize(() => {
-                // Users table
                 db.run(`CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     email TEXT UNIQUE NOT NULL,
@@ -30,9 +32,11 @@ function initDatabase() {
                     last_name TEXT NOT NULL,
                     company TEXT,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                )`);
+                )`, (err) => {
+                    if (err) console.error('Users table error:', err.message);
+                    else console.log('✅ Users table ready');
+                });
                 
-                // Scans table
                 db.run(`CREATE TABLE IF NOT EXISTS scans (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
@@ -45,25 +49,27 @@ function initDatabase() {
                     duration_seconds INTEGER,
                     security_score INTEGER,
                     FOREIGN KEY(user_id) REFERENCES users(id)
-                )`);
+                )`, (err) => {
+                    if (err) console.error('Scans table error:', err.message);
+                    else console.log('✅ Scans table ready');
+                });
                 
-                // Vulnerabilities table (100+ types supported)
                 db.run(`CREATE TABLE IF NOT EXISTS vulnerabilities (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     scan_id INTEGER NOT NULL,
                     title TEXT NOT NULL,
                     description TEXT,
-                    severity TEXT CHECK(severity IN ('critical','high','medium','low')),
+                    severity TEXT,
                     location TEXT,
                     remediation TEXT,
-                    cvss_score REAL,
-                    cwe_id TEXT,
                     status TEXT DEFAULT 'open',
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY(scan_id) REFERENCES scans(id)
-                )`);
+                )`, (err) => {
+                    if (err) console.error('Vulnerabilities table error:', err.message);
+                    else console.log('✅ Vulnerabilities table ready');
+                });
                 
-                // Reports table
                 db.run(`CREATE TABLE IF NOT EXISTS reports (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
@@ -72,19 +78,22 @@ function initDatabase() {
                     content TEXT,
                     generated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY(user_id) REFERENCES users(id)
-                )`);
-                
-                // Indexes
-                db.run(`CREATE INDEX IF NOT EXISTS idx_scans_user ON scans(user_id)`);
-                db.run(`CREATE INDEX IF NOT EXISTS idx_vulns_scan ON vulnerabilities(scan_id)`);
-                db.run(`CREATE INDEX IF NOT EXISTS idx_vulns_severity ON vulnerabilities(severity)`);
-                
-                console.log('✅ All tables created');
-                resolve();
+                )`, (err) => {
+                    if (err) console.error('Reports table error:', err.message);
+                    else console.log('✅ Reports table ready');
+                });
             });
+            
+            resolve();
         });
     });
 }
 
-function getDb() { return db; }
+function getDb() {
+    if (!db) {
+        throw new Error('Database not initialized');
+    }
+    return db;
+}
+
 module.exports = { initDatabase, getDb };
